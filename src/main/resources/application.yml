@@ -8,5 +8,14 @@ server:
   address: 127.0.0.1   # zero egress e sem exposição: só loopback
   port: 8765
 
+# Mesmos nomes de ambiente da versão Python (CODE_SEARCH_*).
 code-search:
-  allow-remote: false  # adapters que saem da máquina só com true
+  home: ${CODE_SEARCH_HOME:}               # padrão: ~/.workflows/code-search
+  embedder: ${CODE_SEARCH_EMBEDDER:ollama}
+  ollama-url: ${CODE_SEARCH_OLLAMA_URL:http://127.0.0.1:11434}
+  ollama-model: ${CODE_SEARCH_OLLAMA_MODEL:}
+  doc-prefix: ${CODE_SEARCH_DOC_PREFIX:}
+  query-prefix: ${CODE_SEARCH_QUERY_PREFIX:}
+  max-concurrent: 4
+  timeout-seconds: 30
+  allow-remote: ${CODE_SEARCH_ALLOW_REMOTE:false}  # adapters que saem da máquina só com true

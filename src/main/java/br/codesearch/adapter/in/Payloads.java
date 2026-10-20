@@ -1,0 +1,122 @@
+package br.codesearch.adapter.in;
+
+import br.codesearch.application.SearchService;
+import br.codesearch.application.SearchResponse;
+import br.codesearch.domain.ChunkView;
+import br.codesearch.domain.CodeSearchException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import tools.jackson.databind.JsonNode;
+
+/** Formato JSON das respostas e validação estrita do corpo das buscas, compartilhados por HTTP, MCP e CLI. */
+public final class Payloads {
+
+    private static final List<String> ALLOWED_FIELDS = List.of("query", "mode", "repos", "languages", "path_prefix", "top_k");
+
+    private Payloads() {}
+
+    public static Map<String, Object> searchResponse(SearchResponse r) {
+        List<Map<String, Object>> results = new ArrayList<>();
+        for (SearchResponse.Result item : r.results()) {
+            ChunkView c = item.chunk();
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("repo", c.repo());
+            m.put("source", c.source());
+            m.put("symbol", c.symbol());
+            m.put("parent_symbol", c.parentSymbol());
+            m.put("start_line", c.startLine());
+            m.put("end_line", c.endLine());
+            m.put("language", c.language());
+            m.put("score", item.score());
+            m.put("text", c.text());
+            m.put("repo_revision", c.repoRevision());
+            m.put("indexed_at", c.indexedAt());
+            results.add(m);
+        }
+        List<Map<String, Object>> unavailable = new ArrayList<>();
+        for (SearchResponse.Unavailable u : r.coverage().unavailable()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("repo", u.repo());
+            m.put("reason", u.reason());
+            unavailable.add(m);
+        }
+        Map<String, Object> coverage = new LinkedHashMap<>();
+        coverage.put("searched", r.coverage().searched());
+        coverage.put("unavailable", unavailable);
+        Map<String, Object> index = new LinkedHashMap<>();
+        index.put("profile_id", r.index().profileId());
+        index.put("generation", r.index().generation());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("status", r.status());
+        out.put("results", results);
+        out.put("coverage", coverage);
+        out.put("index", index);
+        out.put("request_id", r.requestId());
+        return out;
+    }
+
+    public static Map<String, Object> error(CodeSearchException e, String requestId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", e.code());
+        body.put("message", e.getMessage());
+        if (requestId != null) {
+            body.put("request_id", requestId);
+        }
+        return Map.of("error", body);
+    }
+
+    private static CodeSearchException invalid(String message) {
+        return new CodeSearchException("invalid_request", message);
+    }
+
+    private static List<String> stringList(JsonNode value, String name) {
+        if (value == null || value.isNull()) {
+            return null;
+        }
+        if (!value.isArray()) {
+            throw invalid(name + " must be a list of strings");
+        }
+        List<String> out = new ArrayList<>();
+        for (JsonNode item : value) {
+            if (!item.isString()) {
+                throw invalid(name + " must be a list of strings");
+            }
+            out.add(item.asString());
+        }
+        return out;
+    }
+
+    /** Valida o corpo de uma busca (HTTP ou argumentos da ferramenta MCP). Campo desconhecido é erro. */
+    public static SearchService.Query parseSearch(JsonNode body, String requestId) {
+        if (body == null || !body.isObject()) {
+            throw invalid("body must be a JSON object");
+        }
+        for (var field : body.properties()) {
+            if (!ALLOWED_FIELDS.contains(field.getKey())) {
+                throw invalid("unknown field in request");
+            }
+        }
+        JsonNode query = body.get("query");
+        if (query == null || !query.isString()) {
+            throw invalid("query must be a string");
+        }
+        JsonNode prefix = body.get("path_prefix");
+        if (prefix != null && !prefix.isNull() && !prefix.isString()) {
+            throw invalid("path_prefix must be a string");
+        }
+        JsonNode mode = body.get("mode");
+        if (mode != null && !mode.isString()) {
+            throw invalid("mode must be hybrid, semantic or lexical");
+        }
+        JsonNode topK = body.get("top_k");
+        if (topK != null && !topK.isIntegralNumber()) {
+            throw invalid("top_k out of range");
+        }
+        return new SearchService.Query(
+                query.asString(), mode == null ? "hybrid" : mode.asString(), stringList(body.get("repos"), "repos"),
+                stringList(body.get("languages"), "languages"), prefix == null || prefix.isNull() ? null : prefix.asString(),
+                topK == null ? 10 : topK.asInt(), requestId);
+    }
+}

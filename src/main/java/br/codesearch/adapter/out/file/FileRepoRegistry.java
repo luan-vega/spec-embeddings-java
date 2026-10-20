@@ -1,6 +1,6 @@
 package br.codesearch.adapter.out.file;
 
-import br.codesearch.application.port.RepoRegistry;
+import br.codesearch.application.port.RepoCatalog;
 import br.codesearch.domain.CodeSearchException;
 import br.codesearch.domain.RepoEntry;
 import java.nio.file.Files;
@@ -18,7 +18,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Registro de repositórios em {@code repositories.json}. Remover um repo altera só o registro. */
-public final class FileRepoRegistry implements RepoRegistry {
+public final class FileRepoRegistry implements RepoCatalog {
 
     private static final Pattern REPO_ID = Pattern.compile("^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$");
     private static final JsonMapper JSON = JsonMapper.builder().build();
@@ -88,6 +88,7 @@ public final class FileRepoRegistry implements RepoRegistry {
         return load().get(repoId);
     }
 
+    @Override
     public RepoEntry add(String repoId, Path repoPath, List<String> roots) {
         if (!REPO_ID.matcher(repoId).matches()) {
             throw new CodeSearchException("invalid_request", "invalid repo_id");
@@ -110,6 +111,7 @@ public final class FileRepoRegistry implements RepoRegistry {
         return entry;
     }
 
+    @Override
     public boolean remove(String repoId) {
         try (FileLock ignored = lock()) {
             Map<String, RepoEntry> entries = load();
@@ -121,6 +123,7 @@ public final class FileRepoRegistry implements RepoRegistry {
         }
     }
 
+    @Override
     public void setEnabled(String repoId, boolean enabled) {
         try (FileLock ignored = lock()) {
             Map<String, RepoEntry> entries = load();

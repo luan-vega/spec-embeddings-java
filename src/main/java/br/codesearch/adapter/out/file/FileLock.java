@@ -36,7 +36,7 @@ public final class FileLock implements AutoCloseable {
                 }
                 if (System.nanoTime() > deadline) {
                     channel.close();
-                    throw new CodeSearchException("busy", "another operation holds the lock");
+                    throw new CodeSearchException("store_busy", "another operation holds the lock");
                 }
                 Thread.sleep(25);
             }
@@ -44,7 +44,7 @@ public final class FileLock implements AutoCloseable {
             throw new CodeSearchException("storage_error", "could not lock " + file.getFileName());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new CodeSearchException("busy", "interrupted while waiting for the lock");
+            throw new CodeSearchException("store_busy", "interrupted while waiting for the lock");
         }
     }
 
