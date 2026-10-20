@@ -11,7 +11,7 @@ import java.util.Map;
 import tools.jackson.databind.JsonNode;
 
 /**
- * EXTERNOS: descritores que mandam o código do método para a OpenAI ou para a Claude (Anthropic Messages). Só entram com
+ * EXTERNOS: descritores que mandam o código do método para a OpenAI, a Claude (Anthropic Messages) ou o Gemini. Só entram com
  * permissão explícita (ver a raiz de composição). A Anthropic não tem API de embeddings, então a Claude só descreve.
  */
 public final class RemoteDescribers {
@@ -112,6 +112,34 @@ public final class RemoteDescribers {
             }
             if (text.isEmpty()) {
                 throw new CodeSearchException("describer_unavailable", "unexpected response from Claude");
+            }
+            return text.toString();
+        }
+    }
+
+    public static final class Gemini extends Base {
+        public Gemini(String baseUrl, String apiKey, String model) {
+            super("gemini", new RemoteHttp(baseUrl, Map.of("x-goog-api-key", requireKey(apiKey, "GEMINI_API_KEY")),
+                    Duration.ofSeconds(120), "describer_unavailable"), model);
+        }
+
+        @Override
+        String send(String prompt) {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))));
+            body.put("generationConfig", Map.of("temperature", 0, "maxOutputTokens", DescriberPrompt.MAX_OUTPUT_TOKENS));
+            RemoteHttp.Response resp = http.post("models/" + model + ":generateContent", body);
+            if (resp.status() != 200 || resp.body() == null) {
+                throw http.failure(resp, "Gemini failed to generate a description");
+            }
+            StringBuilder text = new StringBuilder();
+            for (JsonNode part : resp.body().path("candidates").path(0).path("content").path("parts")) {
+                if (!part.path("thought").asBoolean(false)) {
+                    text.append(part.path("text").asString("")).append(' ');
+                }
+            }
+            if (text.isEmpty()) {
+                throw new CodeSearchException("describer_unavailable", "unexpected response from Gemini");
             }
             return text.toString();
         }

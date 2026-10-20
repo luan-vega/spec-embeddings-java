@@ -31,7 +31,8 @@ class RemoteGateTest {
         server.createContext("/", ex -> {
             byte[] b = (ex.getRequestURI().getPath().endsWith("embeddings")
                     ? "{\"data\":[{\"embedding\":[1,0]}]}"
-                    : "{\"content\":[{\"type\":\"text\",\"text\":\"Does a thing.\"}],\"choices\":[{\"message\":{\"content\":\"Does a thing.\"}}]}")
+                    : ex.getRequestURI().getPath().endsWith("batchEmbedContents") ? "{\"embeddings\":[{\"values\":[1,0]}]}"
+                    : "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Does a thing.\"}]}}],\"content\":[{\"type\":\"text\",\"text\":\"Does a thing.\"}],\"choices\":[{\"message\":{\"content\":\"Does a thing.\"}}]}")
                     .getBytes(StandardCharsets.UTF_8);
             ex.sendResponseHeaders(200, b.length);
             ex.getResponseBody().write(b);
@@ -42,12 +43,12 @@ class RemoteGateTest {
     }
 
     static CodeSearchProperties props(String embedder, String describer, boolean allowRemote, String base) {
-        return new CodeSearchProperties("", embedder, "", "", "", "", 0, 0, allowRemote, describer, "", base, "", 0, base);
+        return new CodeSearchProperties("", embedder, "", "", "", "", 0, 0, allowRemote, describer, "", base, "", 0, base, base, "", 0);
     }
 
     @Test
     void externalEmbedderIsRefusedWithoutPermission() {
-        assertThatThrownBy(() -> new CodeSearchConfig().embedder(props("openai", "", false, "http://127.0.0.1:1"), "sk-x"))
+        assertThatThrownBy(() -> new CodeSearchConfig().embedder(props("openai", "", false, "http://127.0.0.1:1"), "sk-x", ""))
                 .isInstanceOfSatisfying(CodeSearchException.class, e -> {
                     assertThat(e.code()).isEqualTo("embedder_unavailable");
                     assertThat(e.getMessage()).contains("external").contains("--allow-remote").contains("CODE_SEARCH_ALLOW_REMOTE=1");
@@ -56,8 +57,8 @@ class RemoteGateTest {
 
     @Test
     void externalDescribersAreRefusedWithoutPermissionAndOnlyWhenUsed() {
-        for (String name : new String[] {"openai", "claude"}) {
-            ChunkDescriber lazy = new CodeSearchConfig().chunkDescriber(props("ollama", name, false, "http://127.0.0.1:1"), "k", "k");
+        for (String name : new String[] {"openai", "claude", "gemini"}) {
+            ChunkDescriber lazy = new CodeSearchConfig().chunkDescriber(props("ollama", name, false, "http://127.0.0.1:1"), "k", "k", "k");
             // criar o bean não consulta ninguém; o gate dispara quando a indexação realmente descreve
             assertThatThrownBy(lazy::describerId).isInstanceOfSatisfying(CodeSearchException.class, e -> {
                 assertThat(e.code()).isEqualTo("describer_unavailable");
@@ -68,7 +69,7 @@ class RemoteGateTest {
 
     @Test
     void noDescriberMeansEmptyIdAndTextAndLocal() {
-        ChunkDescriber none = new CodeSearchConfig().chunkDescriber(props("ollama", "", false, ""), "", "");
+        ChunkDescriber none = new CodeSearchConfig().chunkDescriber(props("ollama", "", false, ""), "", "", "");
         assertThat(none.describerId()).isEmpty();
         assertThat(none.describe("A", "x")).isEmpty();
         assertThat(none.local()).isTrue();
@@ -76,10 +77,10 @@ class RemoteGateTest {
 
     @Test
     void unknownProvidersListWhatExists() {
-        assertThatThrownBy(() -> new CodeSearchConfig().embedder(props("gemini", "", true, ""), ""))
-                .hasMessageContaining("available: ollama, openai");
-        ChunkDescriber lazy = new CodeSearchConfig().chunkDescriber(props("ollama", "gemini", true, ""), "", "");
-        assertThatThrownBy(lazy::describerId).hasMessageContaining("available: ollama, openai, claude");
+        assertThatThrownBy(() -> new CodeSearchConfig().embedder(props("cohere", "", true, ""), "", ""))
+                .hasMessageContaining("available: ollama, openai, gemini");
+        ChunkDescriber lazy = new CodeSearchConfig().chunkDescriber(props("ollama", "cohere", true, ""), "", "", "");
+        assertThatThrownBy(lazy::describerId).hasMessageContaining("available: ollama, openai, claude, gemini");
     }
 
     @Test
@@ -89,17 +90,21 @@ class RemoteGateTest {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         System.setErr(new PrintStream(err, true, StandardCharsets.UTF_8));
         try {
-            Embedder embedder = new CodeSearchConfig().embedder(props("openai", "", true, base), "sk-x");
+            Embedder embedder = new CodeSearchConfig().embedder(props("openai", "", true, base), "sk-x", "");
             assertThat(embedder.local()).isFalse();
-            ChunkDescriber claude = new CodeSearchConfig().chunkDescriber(props("ollama", "claude", true, base), "", "sk-ant");
+            ChunkDescriber claude = new CodeSearchConfig().chunkDescriber(props("ollama", "claude", true, base), "", "sk-ant", "");
             assertThat(claude.describerId()).hasSize(16);
             assertThat(claude.describe("A.b", "void b() {}")).isEqualTo("Does a thing.");
             assertThat(claude.local()).isFalse();
+            Embedder gemini = new CodeSearchConfig().embedder(props("gemini", "", true, base), "", "gk");
+            assertThat(gemini.local()).isFalse();
+            assertThat(new CodeSearchConfig().chunkDescriber(props("ollama", "gemini", true, base), "", "", "gk")
+                    .describe("A.b", "void b() {}")).isEqualTo("Does a thing.");
         } finally {
             System.setErr(oldErr);
         }
         String notice = err.toString(StandardCharsets.UTF_8);
-        assertThat(notice).contains("embedder 'openai' é EXTERNO").contains("describer 'claude' é EXTERNO").contains("127.0.0.1");
-        assertThat(notice).doesNotContain("sk-x").doesNotContain("sk-ant");
+        assertThat(notice).contains("embedder 'openai' é EXTERNO").contains("describer 'claude' é EXTERNO").contains("embedder 'gemini' é EXTERNO").contains("127.0.0.1");
+        assertThat(notice).doesNotContain("sk-x").doesNotContain("sk-ant").doesNotContain("gk");
     }
 }
