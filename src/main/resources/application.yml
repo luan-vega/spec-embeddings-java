@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: code-search
+  main:
+    banner-mode: "off"
+
+server:
+  address: 127.0.0.1   # zero egress e sem exposição: só loopback
+  port: 8765
+
+code-search:
+  allow-remote: false  # adapters que saem da máquina só com true
