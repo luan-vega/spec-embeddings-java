@@ -12,4 +12,9 @@ public interface Embedder {
     List<float[]> embedDocuments(List<String> texts);
 
     float[] embedQuery(String text);
+
+    /** Falso quando o texto enviado sai da máquina (provedor externo). */
+    default boolean local() {
+        return true;
+    }
 }

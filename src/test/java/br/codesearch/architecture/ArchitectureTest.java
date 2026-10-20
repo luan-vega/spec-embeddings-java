@@ -23,4 +23,14 @@ class ArchitectureTest {
             .that().resideInAPackage("br.codesearch.application..")
             .should().dependOnClassesThat().resideInAnyPackage(
                     "br.codesearch.adapter..", "br.codesearch.config..", "org.springframework..");
+
+    @ArchTest
+    static final ArchRule drivingAdaptersDoNotKnowDrivenAdaptersOrConfig = noClasses()
+            .that().resideInAPackage("br.codesearch.adapter.in..")
+            .should().dependOnClassesThat().resideInAnyPackage("br.codesearch.adapter.out..", "br.codesearch.config..");
+
+    @ArchTest
+    static final ArchRule drivenAdaptersDoNotKnowDrivingAdaptersOrConfig = noClasses()
+            .that().resideInAPackage("br.codesearch.adapter.out..")
+            .should().dependOnClassesThat().resideInAnyPackage("br.codesearch.adapter.in..", "br.codesearch.config..");
 }

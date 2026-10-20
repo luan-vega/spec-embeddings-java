@@ -8,5 +8,21 @@ server:
   address: 127.0.0.1   # zero egress e sem exposição: só loopback
   port: 8765
 
+# Mesmos nomes de ambiente da versão Python (CODE_SEARCH_*).
 code-search:
-  allow-remote: false  # adapters que saem da máquina só com true
+  home: ${CODE_SEARCH_HOME:}               # padrão: ~/.workflows/code-search
+  embedder: ${CODE_SEARCH_EMBEDDER:ollama}
+  ollama-url: ${CODE_SEARCH_OLLAMA_URL:http://127.0.0.1:11434}
+  ollama-model: ${CODE_SEARCH_OLLAMA_MODEL:}
+  doc-prefix: ${CODE_SEARCH_DOC_PREFIX:}
+  query-prefix: ${CODE_SEARCH_QUERY_PREFIX:}
+  max-concurrent: 4
+  timeout-seconds: 30
+  # Provedores EXTERNOS (o texto sai da máquina): só com allow-remote, ou --allow-remote no comando.
+  allow-remote: ${CODE_SEARCH_ALLOW_REMOTE:false}
+  describer: ${CODE_SEARCH_DESCRIBER:}                 # vazio, ollama, openai ou claude
+  describer-model: ${CODE_SEARCH_DESCRIBER_MODEL:}
+  openai-base-url: ${CODE_SEARCH_OPENAI_BASE_URL:https://api.openai.com/v1}
+  openai-model: ${CODE_SEARCH_OPENAI_MODEL:text-embedding-3-small}
+  openai-dimensions: ${CODE_SEARCH_OPENAI_DIMENSIONS:0}
+  anthropic-base-url: ${CODE_SEARCH_ANTHROPIC_BASE_URL:https://api.anthropic.com}

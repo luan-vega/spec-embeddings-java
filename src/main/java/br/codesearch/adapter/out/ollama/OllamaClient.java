@@ -1,15 +1,14 @@
 package br.codesearch.adapter.out.ollama;
 
 import br.codesearch.domain.CodeSearchException;
+import br.codesearch.domain.Loopback;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
-import java.util.regex.Pattern;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -18,7 +17,6 @@ import tools.jackson.databind.json.JsonMapper;
 public final class OllamaClient {
 
     public static final String DEFAULT_URL = "http://127.0.0.1:11434";
-    private static final Pattern IP_LITERAL = Pattern.compile("^(\\d{1,3}(\\.\\d{1,3}){3}|\\[?[0-9A-Fa-f:]+\\]?)$");
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
     public record Response(int status, JsonNode body) {}
@@ -29,29 +27,12 @@ public final class OllamaClient {
 
     public OllamaClient(String url, Duration timeout) {
         URI uri = URI.create(url);
-        if (!"http".equals(uri.getScheme()) || !isLoopback(uri.getHost())) {
+        if (!"http".equals(uri.getScheme()) || !Loopback.isLoopback(uri.getHost())) {
             throw new CodeSearchException("embedder_unavailable", "the Ollama URL must be http on a loopback address");
         }
         this.base = uri;
         this.timeout = timeout;
         this.http = HttpClient.newBuilder().connectTimeout(timeout).build();
-    }
-
-    static boolean isLoopback(String host) {
-        if (host == null) {
-            return false;
-        }
-        if (host.equals("localhost")) {
-            return true;
-        }
-        if (!IP_LITERAL.matcher(host).matches()) {
-            return false; // nome de domínio: nunca resolve DNS para decidir
-        }
-        try {
-            return InetAddress.getByName(host).isLoopbackAddress();
-        } catch (IOException e) {
-            return false;
-        }
     }
 
     public Response request(String method, String path, Map<String, Object> body) {
