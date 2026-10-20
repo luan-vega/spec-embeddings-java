@@ -111,10 +111,10 @@ class PythonParityTest {
 
     @Test
     void collapseOverlapsMatchesPython() {
-        Map<String, Fusion.Location> locations = new HashMap<>();
+        Map<String, Location> locations = new HashMap<>();
         for (JsonNode l : golden.get("fusion").get("locations")) {
             locations.put(l.get(0).asString() + "/" + l.get(1).asInt(),
-                    new Fusion.Location(l.get(2).asString(), l.get(3).asInt(), l.get(4).asInt()));
+                    new Location(l.get(2).asString(), l.get(3).asInt(), l.get(4).asInt()));
         }
         List<Hit> order = List.of(new Hit("a", 1, 0), new Hit("a", 2, 0), new Hit("b", 1, 0), new Hit("a", 3, 0), new Hit("b", 2, 0));
         for (JsonNode c : golden.get("fusion").get("collapse")) {

@@ -14,8 +14,6 @@ public final class Fusion {
 
     private Fusion() {}
 
-    public record Location(String source, int startLine, int endLine) {}
-
     /** Reciprocal Rank Fusion: usa só posições, então dispensa calibrar scores entre sinais. */
     public static List<Hit> rrf(List<List<Hit>> rankings, int k) {
         record Key(String repoId, int row) {}
