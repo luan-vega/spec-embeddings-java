@@ -3,6 +3,7 @@ package br.codesearch.adapter.in.cli;
 import br.codesearch.adapter.in.Payloads;
 import br.codesearch.adapter.in.mcp.McpServer;
 import br.codesearch.application.BoundedRunner;
+import br.codesearch.application.Evaluation;
 import br.codesearch.application.IndexReport;
 import br.codesearch.application.IndexService;
 import br.codesearch.application.SearchResponse;
@@ -18,10 +19,12 @@ import br.codesearch.domain.RepoEntry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +51,8 @@ public final class CliCommands {
               prune [--tmp-max-age SEGUNDOS]          apaga gerações e segmentos sem referência
               serve [--host H] [--port N]             HTTP local em 127.0.0.1
               mcp                                     servidor MCP por stdio (somente leitura)
+              eval --dataset F --thresholds F [--repo ID]... [--out F]
+                                                      gate de avaliação (UC1/UC2/UC3); sai com 1 se reprovar
 
             provedor, em qualquer comando (padrão: local, pelo ambiente):
               --embedder ollama|openai|gemini         openai e gemini são EXTERNOS: trechos e consultas saem da máquina
@@ -60,7 +65,8 @@ public final class CliCommands {
             "policy", Set.of("--force"), "index", Set.of("--force"), "search", Set.of("--json"), "status", Set.of("--json"));
     private static final Map<String, Set<String>> OPTIONS = Map.of(
             "repo", Set.of("--root"), "index", Set.of("--repo"),
-            "search", Set.of("--mode", "--repo", "--language", "--path-prefix", "--top-k"), "prune", Set.of("--tmp-max-age"));
+            "search", Set.of("--mode", "--repo", "--language", "--path-prefix", "--top-k"), "prune", Set.of("--tmp-max-age"),
+            "eval", Set.of("--dataset", "--thresholds", "--repo", "--out"));
 
     private final RepoCatalog registry;
     private final PolicyStore policies;
@@ -201,6 +207,9 @@ public final class CliCommands {
                 new McpServer(search, status, runner).serve(in, out);
                 return 0;
             }
+            case "eval" -> {
+                return eval(p, out);
+            }
             case "serve" -> throw new CodeSearchException("invalid_request", "serve must be the first argument of the application");
             default -> throw new CodeSearchException("invalid_request", "unknown command");
         }
@@ -254,6 +263,44 @@ public final class CliCommands {
         }
         out.println("geração " + report.generationId() + " ativa");
         return 0;
+    }
+
+    private int eval(Parsed p, PrintStream out) throws IOException {
+        expect(p, 0, "no positional arguments");
+        if (p.one("--dataset", null) == null || p.one("--thresholds", null) == null) {
+            throw new CodeSearchException("invalid_request", "eval requires --dataset and --thresholds");
+        }
+        Evaluation.Thresholds thresholds = EvalFiles.loadThresholds(Path.of(p.one("--thresholds", null)));
+        List<Evaluation.Case> cases = EvalFiles.loadDataset(Path.of(p.one("--dataset", null)));
+        SearchService service = search.get();
+        Evaluation.Report report = Evaluation.evaluate(service::search, cases, Evaluation.MODES, thresholds.k(), p.all("--repo"));
+        List<Evaluation.Failure> failures = Evaluation.checkThresholds(report, thresholds);
+
+        Map<String, Object> json = new LinkedHashMap<>();
+        json.put("k", report.k());
+        json.put("cases", report.cases());
+        json.put("modes", report.modes());
+        json.put("thresholds_sha256", thresholds.sha256());
+        json.put("passed", failures.isEmpty());
+        List<Map<String, Object>> failed = new ArrayList<>();
+        for (Evaluation.Failure f : failures) {
+            Map<String, Object> m = new LinkedHashMap<>(f.rule().raw());
+            m.put("actual", f.actual());
+            if (f.rule().minDeltaVs() != null && f.reason() == null) {
+                m.put("baseline", f.baseline());
+            }
+            if (f.reason() != null) {
+                m.put("reason", f.reason());
+            }
+            failed.add(m);
+        }
+        json.put("failures", failed);
+        String text = JSON.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+        if (p.one("--out", null) != null) {
+            Files.writeString(Path.of(p.one("--out", null)), text);
+        }
+        out.println(text);
+        return failures.isEmpty() ? 0 : 1;
     }
 
     private int search(Parsed p, PrintStream out) {
