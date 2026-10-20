@@ -73,6 +73,12 @@ public final class CanonicalJson {
             out.append(b ? "true" : "false");
         } else if (value instanceof Integer || value instanceof Long || value instanceof Short || value instanceof Byte) {
             out.append(value);
+        } else if (value instanceof Double d) {
+            String text = d.toString(); // coincide com repr() do Python nos valores simples (1.2, 0.75)
+            if (text.contains("E") || d.isNaN() || d.isInfinite()) {
+                throw new IllegalArgumentException("unsupported JSON number: " + value);
+            }
+            out.append(text);
         } else {
             throw new IllegalArgumentException("unsupported JSON value: " + value);
         }
