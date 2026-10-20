@@ -1,0 +1,1783 @@
+{
+ "chunker_version": "1",
+ "chunks": {
+  "Constantes.java": [
+   {
+    "source": "src/main/java/br/Constantes.java",
+    "symbol": "Constantes",
+    "parent_symbol": "",
+    "class_name": "Constantes",
+    "start_line": 1,
+    "end_line": 7,
+    "text": "package br.constantes;\n\npublic final class Constantes {\n    public static final int MAXIMO = 100;\n    public static final String ROTULO = \"valor padrão do sistema\";\n    public static final int[] FAIXAS = {1, 2, 3, 4, 5, 6, 7, 8};\n}",
+    "embed_key": "512f85360a18c4fee4ccb5bde70e578cc699d74892a59653d85f928b51fcf2d9",
+    "embed_key_described": "c816874d5a121e97b391a2d7f140dc6599b57771f3e856658d215749b3a43d6f",
+    "content_hash": "74769981bc4760dd",
+    "embed_text": "repo: svc\npath: src/main/java/br/Constantes.java\nclass: Constantes\nsymbol: Constantes\nlines: 1-7\n\npackage br.constantes;\n\npublic final class Constantes {\n    public static final int MAXIMO = 100;\n    public static final String ROTULO = \"valor padrão do sistema\";\n    public static final int[] FAIXAS = {1, 2, 3, 4, 5, 6, 7, 8};\n}",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Constantes.java\nclass: Constantes\nsymbol: Constantes\nlines: 1-7\nsummary: Does a thing.\n\npackage br.constantes;\n\npublic final class Constantes {\n    public static final int MAXIMO = 100;\n    public static final String ROTULO = \"valor padrão do sistema\";\n    public static final int[] FAIXAS = {1, 2, 3, 4, 5, 6, 7, 8};\n}",
+    "chunk_id": "0608d0b7-d2e1-5736-8911-b98386d9d89e"
+   }
+  ],
+  "Exsrc_Boleto.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Boleto.java",
+    "symbol": "Exsrc_Boleto",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Boleto",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.pagamento;\n\npublic class Boleto {",
+    "embed_key": "dd7ed45273babc301b252d7b8934f6a09f6439557462a8f3148c394cbdb0d35e",
+    "embed_key_described": "f2557792c1838bbbb60c469c7c5b8ce0deec33a76ba84650dd4e382a152e3b7e",
+    "content_hash": "d7a1e0c71608c232",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Boleto.java\nclass: Exsrc_Boleto\nsymbol: Exsrc_Boleto\nlines: 1-3\n\npackage br.pagamento;\n\npublic class Boleto {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Boleto.java\nclass: Exsrc_Boleto\nsymbol: Exsrc_Boleto\nlines: 1-3\nsummary: Does a thing.\n\npackage br.pagamento;\n\npublic class Boleto {",
+    "chunk_id": "6cc0dedf-6175-5bc7-93ff-5f57f1f59ee8"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Boleto.java",
+    "symbol": "Boleto.gerarLinhaDigitavel",
+    "parent_symbol": "Boleto",
+    "class_name": "Boleto",
+    "start_line": 5,
+    "end_line": 9,
+    "text": "    /** Monta o código numérico que o cliente digita para pagar no banco. */\n    public String gerarLinhaDigitavel(String codigoBanco, long numero) {\n        String base = codigoBanco + String.format(\"%010d\", numero);\n        return base + digitoVerificador(base);\n    }",
+    "embed_key": "5ee8c03aedfbf33778cc932f70a4c4c51e386dd7705c27e49b5a4f0ea329feb2",
+    "embed_key_described": "931422ade6c830ab492f2131f29f9715e721b23166d3a2a61e9d132c4463157c",
+    "content_hash": "e246cfd0e7ee47c6",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Boleto.java\nclass: Boleto\nsymbol: Boleto.gerarLinhaDigitavel\nlines: 5-9\n\n    /** Monta o código numérico que o cliente digita para pagar no banco. */\n    public String gerarLinhaDigitavel(String codigoBanco, long numero) {\n        String base = codigoBanco + String.format(\"%010d\", numero);\n        return base + digitoVerificador(base);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Boleto.java\nclass: Boleto\nsymbol: Boleto.gerarLinhaDigitavel\nlines: 5-9\nsummary: Does a thing.\n\n    /** Monta o código numérico que o cliente digita para pagar no banco. */\n    public String gerarLinhaDigitavel(String codigoBanco, long numero) {\n        String base = codigoBanco + String.format(\"%010d\", numero);\n        return base + digitoVerificador(base);\n    }",
+    "chunk_id": "a78380d6-c4c7-5cd1-a19a-b87439ab77ff"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Boleto.java",
+    "symbol": "Boleto.verificarVencimento",
+    "parent_symbol": "Boleto",
+    "class_name": "Boleto",
+    "start_line": 11,
+    "end_line": 13,
+    "text": "    public boolean verificarVencimento(LocalDate vencimento, LocalDate hoje) {\n        return hoje.isAfter(vencimento);\n    }",
+    "embed_key": "6a168867230cd7722a52ce1f8a2c074429a5c73bdaac1a0dad38e7158d762f00",
+    "embed_key_described": "bddcb7d0e639f3a1795555e810a261c416e5eb4615f31254c5d405179aa48d14",
+    "content_hash": "b124ccf6b2bc581a",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Boleto.java\nclass: Boleto\nsymbol: Boleto.verificarVencimento\nlines: 11-13\n\n    public boolean verificarVencimento(LocalDate vencimento, LocalDate hoje) {\n        return hoje.isAfter(vencimento);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Boleto.java\nclass: Boleto\nsymbol: Boleto.verificarVencimento\nlines: 11-13\nsummary: Does a thing.\n\n    public boolean verificarVencimento(LocalDate vencimento, LocalDate hoje) {\n        return hoje.isAfter(vencimento);\n    }",
+    "chunk_id": "57a85db0-22dc-58a1-942f-f219d09c9e13"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Boleto.java",
+    "symbol": "Boleto.calcularMulta",
+    "parent_symbol": "Boleto",
+    "class_name": "Boleto",
+    "start_line": 15,
+    "end_line": 17,
+    "text": "    public double calcularMulta(double valor, int diasAtraso) {\n        return diasAtraso <= 0 ? 0.0 : valor * 0.02 + valor * 0.001 * diasAtraso;\n    }",
+    "embed_key": "2a79c09ab129203e884936112de0ecd94576df5e17504658f7e43bb6742a6566",
+    "embed_key_described": "565bd5ba4acbb968d88f838830d4972b4c0efac244d8f0b31ca787493df31357",
+    "content_hash": "b5107c77f9122981",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Boleto.java\nclass: Boleto\nsymbol: Boleto.calcularMulta\nlines: 15-17\n\n    public double calcularMulta(double valor, int diasAtraso) {\n        return diasAtraso <= 0 ? 0.0 : valor * 0.02 + valor * 0.001 * diasAtraso;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Boleto.java\nclass: Boleto\nsymbol: Boleto.calcularMulta\nlines: 15-17\nsummary: Does a thing.\n\n    public double calcularMulta(double valor, int diasAtraso) {\n        return diasAtraso <= 0 ? 0.0 : valor * 0.02 + valor * 0.001 * diasAtraso;\n    }",
+    "chunk_id": "74f6a05f-ee41-58b9-8530-f62f23aae4f8"
+   }
+  ],
+  "Exsrc_Cadastro.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Cadastro.java",
+    "symbol": "Exsrc_Cadastro",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Cadastro",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.cliente;\n\npublic class Cadastro {",
+    "embed_key": "b42426ccbcd4a6546cdebfa8d4f7ef962e521b9ca463b48770fcd0040f341b14",
+    "embed_key_described": "b96d696a5229c6f0377191aa4c7bd8534c0e9eca2fd47a99bb87264a9564b294",
+    "content_hash": "8fb8c3a0fbf0735f",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cadastro.java\nclass: Exsrc_Cadastro\nsymbol: Exsrc_Cadastro\nlines: 1-3\n\npackage br.cliente;\n\npublic class Cadastro {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cadastro.java\nclass: Exsrc_Cadastro\nsymbol: Exsrc_Cadastro\nlines: 1-3\nsummary: Does a thing.\n\npackage br.cliente;\n\npublic class Cadastro {",
+    "chunk_id": "43dbe149-d2b1-51c0-89c4-3b52ed5b7b05"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Cadastro.java",
+    "symbol": "Cadastro.registrarCliente",
+    "parent_symbol": "Cadastro",
+    "class_name": "Cadastro",
+    "start_line": 5,
+    "end_line": 10,
+    "text": "    /** Grava uma nova pessoa na base e devolve o seu código. */\n    public String registrarCliente(Cliente cliente) {\n        String id = UUID.randomUUID().toString();\n        base.put(id, cliente);\n        return id;\n    }",
+    "embed_key": "08dd9ae92eb84fac9b284c57d34101f34c48fdbf27106ef1dbaa693274ec5f4b",
+    "embed_key_described": "04acbe9171fb3aa3c8346a342655c043421cb5230a3d1864f81fcaf8faab5ac9",
+    "content_hash": "207e6e7e15cb5478",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cadastro.java\nclass: Cadastro\nsymbol: Cadastro.registrarCliente\nlines: 5-10\n\n    /** Grava uma nova pessoa na base e devolve o seu código. */\n    public String registrarCliente(Cliente cliente) {\n        String id = UUID.randomUUID().toString();\n        base.put(id, cliente);\n        return id;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cadastro.java\nclass: Cadastro\nsymbol: Cadastro.registrarCliente\nlines: 5-10\nsummary: Does a thing.\n\n    /** Grava uma nova pessoa na base e devolve o seu código. */\n    public String registrarCliente(Cliente cliente) {\n        String id = UUID.randomUUID().toString();\n        base.put(id, cliente);\n        return id;\n    }",
+    "chunk_id": "b64a2eab-3150-5139-85d8-7ef926ce8a7a"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Cadastro.java",
+    "symbol": "Cadastro.inativarCliente",
+    "parent_symbol": "Cadastro",
+    "class_name": "Cadastro",
+    "start_line": 12,
+    "end_line": 14,
+    "text": "    public void inativarCliente(String clienteId) {\n        base.get(clienteId).setAtivo(false);\n    }",
+    "embed_key": "816c7d0d1e54568043cc69de225a0313e6e039f2e883758d0cff139ce8d00215",
+    "embed_key_described": "4c73121a5cfaeae3fba3945db56dfeb4f5a0f893a4ba6fae33c2bc141587523d",
+    "content_hash": "71495b6a9b284ca4",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cadastro.java\nclass: Cadastro\nsymbol: Cadastro.inativarCliente\nlines: 12-14\n\n    public void inativarCliente(String clienteId) {\n        base.get(clienteId).setAtivo(false);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cadastro.java\nclass: Cadastro\nsymbol: Cadastro.inativarCliente\nlines: 12-14\nsummary: Does a thing.\n\n    public void inativarCliente(String clienteId) {\n        base.get(clienteId).setAtivo(false);\n    }",
+    "chunk_id": "7dc9f72f-a1d0-5be4-b3bb-309e3eb97bfe"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Cadastro.java",
+    "symbol": "Cadastro.buscarPorDocumento",
+    "parent_symbol": "Cadastro",
+    "class_name": "Cadastro",
+    "start_line": 16,
+    "end_line": 18,
+    "text": "    public Optional<Cliente> buscarPorDocumento(String documento) {\n        return base.values().stream().filter(c -> c.documento().equals(documento)).findFirst();\n    }",
+    "embed_key": "d9aeae75f5fbb85aceba5ebb7dcc259eb01318d9942e412f6a1992ffc06dc42b",
+    "embed_key_described": "0b922cc830a27683a6cbc79057b7607aa6024f9b2a7574fa9431fe3d3a151d3d",
+    "content_hash": "93e8d7d5a0812a2e",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cadastro.java\nclass: Cadastro\nsymbol: Cadastro.buscarPorDocumento\nlines: 16-18\n\n    public Optional<Cliente> buscarPorDocumento(String documento) {\n        return base.values().stream().filter(c -> c.documento().equals(documento)).findFirst();\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cadastro.java\nclass: Cadastro\nsymbol: Cadastro.buscarPorDocumento\nlines: 16-18\nsummary: Does a thing.\n\n    public Optional<Cliente> buscarPorDocumento(String documento) {\n        return base.values().stream().filter(c -> c.documento().equals(documento)).findFirst();\n    }",
+    "chunk_id": "b7edeba1-3ab3-5f33-833e-7baa7fd053c7"
+   }
+  ],
+  "Exsrc_Cartao.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Cartao.java",
+    "symbol": "Exsrc_Cartao",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Cartao",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.pagamento;\n\npublic class Cartao {",
+    "embed_key": "a8ae05893c87d90f732b14bcbc10bb2af64a946632d01e2d1af28bf439cf2d05",
+    "embed_key_described": "31b2176c1406bb35f00fdada96fd0e8307a1a236ef031d9796bb20b3d812c2c6",
+    "content_hash": "010962cd7288fc59",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cartao.java\nclass: Exsrc_Cartao\nsymbol: Exsrc_Cartao\nlines: 1-3\n\npackage br.pagamento;\n\npublic class Cartao {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cartao.java\nclass: Exsrc_Cartao\nsymbol: Exsrc_Cartao\nlines: 1-3\nsummary: Does a thing.\n\npackage br.pagamento;\n\npublic class Cartao {",
+    "chunk_id": "807944f4-5aa6-57b0-b64b-0d77280f0f6c"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Cartao.java",
+    "symbol": "Cartao.validarNumeroCartao",
+    "parent_symbol": "Cartao",
+    "class_name": "Cartao",
+    "start_line": 5,
+    "end_line": 16,
+    "text": "    /** Confere se a sequência de dígitos do cartão é legítima. */\n    public boolean validarNumeroCartao(String numero) {\n        int soma = 0;\n        boolean alterna = false;\n        for (int i = numero.length() - 1; i >= 0; i--) {\n            int d = numero.charAt(i) - '0';\n            if (alterna) { d *= 2; if (d > 9) d -= 9; }\n            soma += d;\n            alterna = !alterna;\n        }\n        return soma % 10 == 0;\n    }",
+    "embed_key": "c2c3efbc71da45911afcbe5af82ee41dba3b27115c07398b07e175e504fdff01",
+    "embed_key_described": "c529e84bf7f7b720a5027f5bb55c018b5fa79e6a898bbf64d27d130baac546fe",
+    "content_hash": "9ebb77af1669a192",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cartao.java\nclass: Cartao\nsymbol: Cartao.validarNumeroCartao\nlines: 5-16\n\n    /** Confere se a sequência de dígitos do cartão é legítima. */\n    public boolean validarNumeroCartao(String numero) {\n        int soma = 0;\n        boolean alterna = false;\n        for (int i = numero.length() - 1; i >= 0; i--) {\n            int d = numero.charAt(i) - '0';\n            if (alterna) { d *= 2; if (d > 9) d -= 9; }\n            soma += d;\n            alterna = !alterna;\n        }\n        return soma % 10 == 0;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cartao.java\nclass: Cartao\nsymbol: Cartao.validarNumeroCartao\nlines: 5-16\nsummary: Does a thing.\n\n    /** Confere se a sequência de dígitos do cartão é legítima. */\n    public boolean validarNumeroCartao(String numero) {\n        int soma = 0;\n        boolean alterna = false;\n        for (int i = numero.length() - 1; i >= 0; i--) {\n            int d = numero.charAt(i) - '0';\n            if (alterna) { d *= 2; if (d > 9) d -= 9; }\n            soma += d;\n            alterna = !alterna;\n        }\n        return soma % 10 == 0;\n    }",
+    "chunk_id": "0b37f08f-afd3-52b2-9468-a8ba54e2b7cf"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Cartao.java",
+    "symbol": "Cartao.mascararNumero",
+    "parent_symbol": "Cartao",
+    "class_name": "Cartao",
+    "start_line": 18,
+    "end_line": 20,
+    "text": "    public String mascararNumero(String numero) {\n        return \"**** **** **** \" + numero.substring(numero.length() - 4);\n    }",
+    "embed_key": "3185f9d06f16237fd15ad83c3dfe057b3593a84550e84a219097e61828724432",
+    "embed_key_described": "1f8cd8ec2a331654ac73a216f8f39864b66b20a9b4a51ab0b0d0d73630fd5b0a",
+    "content_hash": "770a8f842a743b7c",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cartao.java\nclass: Cartao\nsymbol: Cartao.mascararNumero\nlines: 18-20\n\n    public String mascararNumero(String numero) {\n        return \"**** **** **** \" + numero.substring(numero.length() - 4);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cartao.java\nclass: Cartao\nsymbol: Cartao.mascararNumero\nlines: 18-20\nsummary: Does a thing.\n\n    public String mascararNumero(String numero) {\n        return \"**** **** **** \" + numero.substring(numero.length() - 4);\n    }",
+    "chunk_id": "b1111bdc-0e1f-5e19-8123-97212882ef9a"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Cartao.java",
+    "symbol": "Cartao.parcelarCompra",
+    "parent_symbol": "Cartao",
+    "class_name": "Cartao",
+    "start_line": 22,
+    "end_line": 27,
+    "text": "    public List<Double> parcelarCompra(double total, int parcelas) {\n        double parcela = total / parcelas;\n        List<Double> lista = new ArrayList<>();\n        for (int i = 0; i < parcelas; i++) lista.add(parcela);\n        return lista;\n    }",
+    "embed_key": "8afc57ef7b259c69997dba4e840cc2d4b40bdb189e2f30174edf86973451423f",
+    "embed_key_described": "3a773cfdfb82cbd887e7d78e8b0ee70616d7595a3992164a2ce065ceb62bc42b",
+    "content_hash": "57c4ff910fdc9366",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cartao.java\nclass: Cartao\nsymbol: Cartao.parcelarCompra\nlines: 22-27\n\n    public List<Double> parcelarCompra(double total, int parcelas) {\n        double parcela = total / parcelas;\n        List<Double> lista = new ArrayList<>();\n        for (int i = 0; i < parcelas; i++) lista.add(parcela);\n        return lista;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cartao.java\nclass: Cartao\nsymbol: Cartao.parcelarCompra\nlines: 22-27\nsummary: Does a thing.\n\n    public List<Double> parcelarCompra(double total, int parcelas) {\n        double parcela = total / parcelas;\n        List<Double> lista = new ArrayList<>();\n        for (int i = 0; i < parcelas; i++) lista.add(parcela);\n        return lista;\n    }",
+    "chunk_id": "0947f9dc-d8af-500f-8586-948f4ded6d6d"
+   }
+  ],
+  "Exsrc_Cliente.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Cliente.java",
+    "symbol": "Exsrc_Cliente",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Cliente",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.cliente;\n\npublic class Cliente {",
+    "embed_key": "5d1bc3450ebb7e822d2f5135babc6241fda47ace7978f0cf02942222624185b0",
+    "embed_key_described": "16425c682c71eb3307772bd8de84448c39fd8df7bc58ab27d87f6e393ef790be",
+    "content_hash": "9816f537e2753ff3",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cliente.java\nclass: Exsrc_Cliente\nsymbol: Exsrc_Cliente\nlines: 1-3\n\npackage br.cliente;\n\npublic class Cliente {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cliente.java\nclass: Exsrc_Cliente\nsymbol: Exsrc_Cliente\nlines: 1-3\nsummary: Does a thing.\n\npackage br.cliente;\n\npublic class Cliente {",
+    "chunk_id": "ccc9820a-0326-5578-b662-7d860ce3de23"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Cliente.java",
+    "symbol": "Cliente.validarCpf",
+    "parent_symbol": "Cliente",
+    "class_name": "Cliente",
+    "start_line": 5,
+    "end_line": 9,
+    "text": "    /** Confirma se o número de documento pessoal é válido. */\n    public boolean validarCpf(String documento) {\n        if (documento == null || documento.length() != 11) return false;\n        return digitosConferem(documento);\n    }",
+    "embed_key": "fa5bf900e495159a284e3d9dba4f820889a468718522f0dc275ca9ed799469a9",
+    "embed_key_described": "589ba679798ae7119a6ecc1a4ab2df8d3acb1d445ab0a67a33db152b217bf9fe",
+    "content_hash": "869ec1d607c69811",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cliente.java\nclass: Cliente\nsymbol: Cliente.validarCpf\nlines: 5-9\n\n    /** Confirma se o número de documento pessoal é válido. */\n    public boolean validarCpf(String documento) {\n        if (documento == null || documento.length() != 11) return false;\n        return digitosConferem(documento);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cliente.java\nclass: Cliente\nsymbol: Cliente.validarCpf\nlines: 5-9\nsummary: Does a thing.\n\n    /** Confirma se o número de documento pessoal é válido. */\n    public boolean validarCpf(String documento) {\n        if (documento == null || documento.length() != 11) return false;\n        return digitosConferem(documento);\n    }",
+    "chunk_id": "d6f05f08-a379-5d04-ae50-6d5f7c658cb0"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Cliente.java",
+    "symbol": "Cliente.formatarNomeCompleto",
+    "parent_symbol": "Cliente",
+    "class_name": "Cliente",
+    "start_line": 11,
+    "end_line": 13,
+    "text": "    public String formatarNomeCompleto(String nome, String sobrenome) {\n        return (nome.trim() + \" \" + sobrenome.trim()).toUpperCase();\n    }",
+    "embed_key": "0da973093bf4c3b9ed9dd41669b73a69acd0dea6537931eee71e0bf2171a02ea",
+    "embed_key_described": "bef3462ae1a0cc5964484082dc21cd15465d3020e04ac69936124eb64db37953",
+    "content_hash": "1137029f071c1b52",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cliente.java\nclass: Cliente\nsymbol: Cliente.formatarNomeCompleto\nlines: 11-13\n\n    public String formatarNomeCompleto(String nome, String sobrenome) {\n        return (nome.trim() + \" \" + sobrenome.trim()).toUpperCase();\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cliente.java\nclass: Cliente\nsymbol: Cliente.formatarNomeCompleto\nlines: 11-13\nsummary: Does a thing.\n\n    public String formatarNomeCompleto(String nome, String sobrenome) {\n        return (nome.trim() + \" \" + sobrenome.trim()).toUpperCase();\n    }",
+    "chunk_id": "1d55e0c8-64e4-53f9-8a43-a1a8a92655fa"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Cliente.java",
+    "symbol": "Cliente.calcularIdade",
+    "parent_symbol": "Cliente",
+    "class_name": "Cliente",
+    "start_line": 15,
+    "end_line": 17,
+    "text": "    public int calcularIdade(LocalDate nascimento, LocalDate hoje) {\n        return Period.between(nascimento, hoje).getYears();\n    }",
+    "embed_key": "0c5e3d2d6b920fa8138dd4b42da95cb574d9bacadc762de81dd3e6e2d64b7eb5",
+    "embed_key_described": "7322f3b710a73b302e818cf2a2493ef4986a0b33f093d6789589f27b5fa4e09e",
+    "content_hash": "b74c0e2934249a33",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Cliente.java\nclass: Cliente\nsymbol: Cliente.calcularIdade\nlines: 15-17\n\n    public int calcularIdade(LocalDate nascimento, LocalDate hoje) {\n        return Period.between(nascimento, hoje).getYears();\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Cliente.java\nclass: Cliente\nsymbol: Cliente.calcularIdade\nlines: 15-17\nsummary: Does a thing.\n\n    public int calcularIdade(LocalDate nascimento, LocalDate hoje) {\n        return Period.between(nascimento, hoje).getYears();\n    }",
+    "chunk_id": "1382f5cd-45a9-52a8-ab38-8d3da88dbdfd"
+   }
+  ],
+  "Exsrc_Contato.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Contato.java",
+    "symbol": "Exsrc_Contato",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Contato",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.cliente;\n\npublic class Contato {",
+    "embed_key": "45a45755d1b283e3c09cf36b45eb7999893b9ef04b59cfc3d26fc81dead6da5f",
+    "embed_key_described": "c23aafb6f099870f5fe602185e46d71f720207b5854aabaaad496f2580194781",
+    "content_hash": "2bdf943d93cb0461",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Contato.java\nclass: Exsrc_Contato\nsymbol: Exsrc_Contato\nlines: 1-3\n\npackage br.cliente;\n\npublic class Contato {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Contato.java\nclass: Exsrc_Contato\nsymbol: Exsrc_Contato\nlines: 1-3\nsummary: Does a thing.\n\npackage br.cliente;\n\npublic class Contato {",
+    "chunk_id": "91687d2d-95e2-5ba7-b46b-bd3f788b6c3b"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Contato.java",
+    "symbol": "Contato.validarEmail",
+    "parent_symbol": "Contato",
+    "class_name": "Contato",
+    "start_line": 5,
+    "end_line": 8,
+    "text": "    /** Verifica se o endereço eletrônico tem formato correto. */\n    public boolean validarEmail(String email) {\n        return email != null && email.matches(\"^[^@\\\\s]+@[^@\\\\s]+\\\\.[a-z]{2,}$\");\n    }",
+    "embed_key": "b21704f2001d571ae968223cdca41dba8047436bdd705547df32e44f7ff7a241",
+    "embed_key_described": "480b7433ce9c86fdecfab4a8bd4f4b968e003698f9016dd117d7bfc12ed9584a",
+    "content_hash": "6e0f30a6f62f5b2d",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Contato.java\nclass: Contato\nsymbol: Contato.validarEmail\nlines: 5-8\n\n    /** Verifica se o endereço eletrônico tem formato correto. */\n    public boolean validarEmail(String email) {\n        return email != null && email.matches(\"^[^@\\\\s]+@[^@\\\\s]+\\\\.[a-z]{2,}$\");\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Contato.java\nclass: Contato\nsymbol: Contato.validarEmail\nlines: 5-8\nsummary: Does a thing.\n\n    /** Verifica se o endereço eletrônico tem formato correto. */\n    public boolean validarEmail(String email) {\n        return email != null && email.matches(\"^[^@\\\\s]+@[^@\\\\s]+\\\\.[a-z]{2,}$\");\n    }",
+    "chunk_id": "7d487b3b-edc8-546a-8be7-d981719335fc"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Contato.java",
+    "symbol": "Contato.formatarTelefone",
+    "parent_symbol": "Contato",
+    "class_name": "Contato",
+    "start_line": 10,
+    "end_line": 12,
+    "text": "    public String formatarTelefone(String ddd, String numero) {\n        return \"(\" + ddd + \") \" + numero.substring(0, 5) + \"-\" + numero.substring(5);\n    }",
+    "embed_key": "7d471581b80c0c2f74d461fb7693208874ba1e4dfad6dcdaca38997692a16591",
+    "embed_key_described": "c98fa16a24f0da04d2542c556169cb29e2057be46543331beb5240b9133e53f6",
+    "content_hash": "2d710d87c8e74888",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Contato.java\nclass: Contato\nsymbol: Contato.formatarTelefone\nlines: 10-12\n\n    public String formatarTelefone(String ddd, String numero) {\n        return \"(\" + ddd + \") \" + numero.substring(0, 5) + \"-\" + numero.substring(5);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Contato.java\nclass: Contato\nsymbol: Contato.formatarTelefone\nlines: 10-12\nsummary: Does a thing.\n\n    public String formatarTelefone(String ddd, String numero) {\n        return \"(\" + ddd + \") \" + numero.substring(0, 5) + \"-\" + numero.substring(5);\n    }",
+    "chunk_id": "899a1779-c5de-56ce-95f0-1d36458c5c8a"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Contato.java",
+    "symbol": "Contato.mascararEmail",
+    "parent_symbol": "Contato",
+    "class_name": "Contato",
+    "start_line": 14,
+    "end_line": 17,
+    "text": "    public String mascararEmail(String email) {\n        int arroba = email.indexOf('@');\n        return email.charAt(0) + \"***\" + email.substring(arroba);\n    }",
+    "embed_key": "42078e76103eb37cae98e57e7bf072bd4bb77e0f09b3e25e7577d7d8a42b4ec1",
+    "embed_key_described": "0bd004989a070fe7a9b398eca365ad8d9cdf99f9af581917ad6fc1f8d4d163b2",
+    "content_hash": "796268fc5452f17f",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Contato.java\nclass: Contato\nsymbol: Contato.mascararEmail\nlines: 14-17\n\n    public String mascararEmail(String email) {\n        int arroba = email.indexOf('@');\n        return email.charAt(0) + \"***\" + email.substring(arroba);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Contato.java\nclass: Contato\nsymbol: Contato.mascararEmail\nlines: 14-17\nsummary: Does a thing.\n\n    public String mascararEmail(String email) {\n        int arroba = email.indexOf('@');\n        return email.charAt(0) + \"***\" + email.substring(arroba);\n    }",
+    "chunk_id": "896f6723-3f2c-5bd4-a189-d5afcbeb37b0"
+   }
+  ],
+  "Exsrc_Endereco.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Endereco.java",
+    "symbol": "Exsrc_Endereco",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Endereco",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.cliente;\n\npublic class Endereco {",
+    "embed_key": "d7849f7516131e26d0c98e7762b652699ed3cff24e08d61b85e5269f7332b1ce",
+    "embed_key_described": "3dc57dbb5a6259070c8cf8dec8df141501bad7ad1f3a809b5065e6522be8e663",
+    "content_hash": "94cd3a67f9fd63cf",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Endereco.java\nclass: Exsrc_Endereco\nsymbol: Exsrc_Endereco\nlines: 1-3\n\npackage br.cliente;\n\npublic class Endereco {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Endereco.java\nclass: Exsrc_Endereco\nsymbol: Exsrc_Endereco\nlines: 1-3\nsummary: Does a thing.\n\npackage br.cliente;\n\npublic class Endereco {",
+    "chunk_id": "ff80f588-39b3-5ff9-a6d4-846570215a1e"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Endereco.java",
+    "symbol": "Endereco.normalizarCep",
+    "parent_symbol": "Endereco",
+    "class_name": "Endereco",
+    "start_line": 5,
+    "end_line": 8,
+    "text": "    /** Remove a pontuação do código postal. */\n    public String normalizarCep(String cep) {\n        return cep.replaceAll(\"[^0-9]\", \"\");\n    }",
+    "embed_key": "1e233bd814a1f00473baeaa33b230191a892f646f128e836359c7befa3e7f236",
+    "embed_key_described": "fd13f9785f5a11de7c90c139b58ec48f4a32e68e03eb7f5af4077259275b2694",
+    "content_hash": "d1c6290e7e40f9ec",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Endereco.java\nclass: Endereco\nsymbol: Endereco.normalizarCep\nlines: 5-8\n\n    /** Remove a pontuação do código postal. */\n    public String normalizarCep(String cep) {\n        return cep.replaceAll(\"[^0-9]\", \"\");\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Endereco.java\nclass: Endereco\nsymbol: Endereco.normalizarCep\nlines: 5-8\nsummary: Does a thing.\n\n    /** Remove a pontuação do código postal. */\n    public String normalizarCep(String cep) {\n        return cep.replaceAll(\"[^0-9]\", \"\");\n    }",
+    "chunk_id": "88e1c77b-da4b-5e59-9c08-10aec0865db2"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Endereco.java",
+    "symbol": "Endereco.montarEnderecoCompleto",
+    "parent_symbol": "Endereco",
+    "class_name": "Endereco",
+    "start_line": 10,
+    "end_line": 12,
+    "text": "    public String montarEnderecoCompleto(String rua, int numero, String cidade) {\n        return rua + \", \" + numero + \" - \" + cidade;\n    }",
+    "embed_key": "a4ece47b4e51b159fce3d4eb1814b2d95bca44192664d7366558f5ef60acddff",
+    "embed_key_described": "f76e5e972c83589cf0d7a0e4e246a697bda08f6284399dd52e37d0e8af39adf4",
+    "content_hash": "c6ab5053e476b97e",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Endereco.java\nclass: Endereco\nsymbol: Endereco.montarEnderecoCompleto\nlines: 10-12\n\n    public String montarEnderecoCompleto(String rua, int numero, String cidade) {\n        return rua + \", \" + numero + \" - \" + cidade;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Endereco.java\nclass: Endereco\nsymbol: Endereco.montarEnderecoCompleto\nlines: 10-12\nsummary: Does a thing.\n\n    public String montarEnderecoCompleto(String rua, int numero, String cidade) {\n        return rua + \", \" + numero + \" - \" + cidade;\n    }",
+    "chunk_id": "a96e241a-72f0-5acc-bcab-e883edd5d83f"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Endereco.java",
+    "symbol": "Endereco.estaNaMesmaCidade",
+    "parent_symbol": "Endereco",
+    "class_name": "Endereco",
+    "start_line": 14,
+    "end_line": 16,
+    "text": "    public boolean estaNaMesmaCidade(Endereco a, Endereco b) {\n        return a.cidade().equalsIgnoreCase(b.cidade());\n    }",
+    "embed_key": "b1692bf1876cda5a7fbdaa1a27b2c24658631faf0119701a4aa0c377f50e5a05",
+    "embed_key_described": "74416b12c01a7e67c92e0c5bcefbc1a866317f939da76b32b9cfd5d6c5a72a86",
+    "content_hash": "f4e10636259e42ab",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Endereco.java\nclass: Endereco\nsymbol: Endereco.estaNaMesmaCidade\nlines: 14-16\n\n    public boolean estaNaMesmaCidade(Endereco a, Endereco b) {\n        return a.cidade().equalsIgnoreCase(b.cidade());\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Endereco.java\nclass: Endereco\nsymbol: Endereco.estaNaMesmaCidade\nlines: 14-16\nsummary: Does a thing.\n\n    public boolean estaNaMesmaCidade(Endereco a, Endereco b) {\n        return a.cidade().equalsIgnoreCase(b.cidade());\n    }",
+    "chunk_id": "e08aee20-1633-53aa-b59d-ff103db5e524"
+   }
+  ],
+  "Exsrc_Estoque.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Estoque.java",
+    "symbol": "Exsrc_Estoque",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Estoque",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.estoque;\n\npublic class Estoque {",
+    "embed_key": "0a49a487b7f662a386708ee8467bd2ff0f99df2bde0651a0e1ef767d987ac749",
+    "embed_key_described": "12e6380eb2bf8a19ad3d17bf7a6609b86c744998191a768838789882b29e7cdd",
+    "content_hash": "ea4bd4f296825644",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Estoque.java\nclass: Exsrc_Estoque\nsymbol: Exsrc_Estoque\nlines: 1-3\n\npackage br.estoque;\n\npublic class Estoque {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Estoque.java\nclass: Exsrc_Estoque\nsymbol: Exsrc_Estoque\nlines: 1-3\nsummary: Does a thing.\n\npackage br.estoque;\n\npublic class Estoque {",
+    "chunk_id": "c8826865-2514-50e8-8c25-6e3cc6def459"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Estoque.java",
+    "symbol": "Estoque.reservarItem",
+    "parent_symbol": "Estoque",
+    "class_name": "Estoque",
+    "start_line": 5,
+    "end_line": 11,
+    "text": "    /** Separa unidades para uma compra em andamento. */\n    public boolean reservarItem(String sku, int quantidade) {\n        int disponivel = saldo.getOrDefault(sku, 0);\n        if (disponivel < quantidade) return false;\n        saldo.put(sku, disponivel - quantidade);\n        return true;\n    }",
+    "embed_key": "11a9c1a3edd79145b6e852e110174f193b4aa01c91ee8179bc41cbb4751d6362",
+    "embed_key_described": "00a68fdd2719757d3c95dcafa8f8c750d0eb56c11638ce18fbb3e698115d14c2",
+    "content_hash": "cfd6ea2cb98d8f26",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Estoque.java\nclass: Estoque\nsymbol: Estoque.reservarItem\nlines: 5-11\n\n    /** Separa unidades para uma compra em andamento. */\n    public boolean reservarItem(String sku, int quantidade) {\n        int disponivel = saldo.getOrDefault(sku, 0);\n        if (disponivel < quantidade) return false;\n        saldo.put(sku, disponivel - quantidade);\n        return true;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Estoque.java\nclass: Estoque\nsymbol: Estoque.reservarItem\nlines: 5-11\nsummary: Does a thing.\n\n    /** Separa unidades para uma compra em andamento. */\n    public boolean reservarItem(String sku, int quantidade) {\n        int disponivel = saldo.getOrDefault(sku, 0);\n        if (disponivel < quantidade) return false;\n        saldo.put(sku, disponivel - quantidade);\n        return true;\n    }",
+    "chunk_id": "fc27d554-c31b-58e7-9820-93e2f07d574a"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Estoque.java",
+    "symbol": "Estoque.reporEstoque",
+    "parent_symbol": "Estoque",
+    "class_name": "Estoque",
+    "start_line": 13,
+    "end_line": 15,
+    "text": "    public void reporEstoque(String sku, int quantidade) {\n        saldo.merge(sku, quantidade, Integer::sum);\n    }",
+    "embed_key": "a8414f48d850b22a2cd9c1c09bb410c09eef7d00a771e1ea75e8be3e345ef664",
+    "embed_key_described": "b312242467dbaf7355e0e908bd9eb671a112ecdca494bd13c343dc83d1e890e7",
+    "content_hash": "e24649ca60af6961",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Estoque.java\nclass: Estoque\nsymbol: Estoque.reporEstoque\nlines: 13-15\n\n    public void reporEstoque(String sku, int quantidade) {\n        saldo.merge(sku, quantidade, Integer::sum);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Estoque.java\nclass: Estoque\nsymbol: Estoque.reporEstoque\nlines: 13-15\nsummary: Does a thing.\n\n    public void reporEstoque(String sku, int quantidade) {\n        saldo.merge(sku, quantidade, Integer::sum);\n    }",
+    "chunk_id": "3cd178a2-ccc9-5198-a340-80274c2fdd8f"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Estoque.java",
+    "symbol": "Estoque.calcularGiroEstoque",
+    "parent_symbol": "Estoque",
+    "class_name": "Estoque",
+    "start_line": 17,
+    "end_line": 19,
+    "text": "    public double calcularGiroEstoque(double vendas, double estoqueMedio) {\n        return estoqueMedio == 0 ? 0 : vendas / estoqueMedio;\n    }",
+    "embed_key": "81c3502e43ca271d55d20727506d30a6a7531b4ebe11b875c0c51d4086a11dab",
+    "embed_key_described": "d9ad6ec9609223490d7e655334980c2eb54bc09b89bef5fae100a9b463539e94",
+    "content_hash": "ae1c8cf53b4b1e92",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Estoque.java\nclass: Estoque\nsymbol: Estoque.calcularGiroEstoque\nlines: 17-19\n\n    public double calcularGiroEstoque(double vendas, double estoqueMedio) {\n        return estoqueMedio == 0 ? 0 : vendas / estoqueMedio;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Estoque.java\nclass: Estoque\nsymbol: Estoque.calcularGiroEstoque\nlines: 17-19\nsummary: Does a thing.\n\n    public double calcularGiroEstoque(double vendas, double estoqueMedio) {\n        return estoqueMedio == 0 ? 0 : vendas / estoqueMedio;\n    }",
+    "chunk_id": "78955cb1-3675-583e-b2ad-f682c17ee10f"
+   }
+  ],
+  "Exsrc_Fatura.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Fatura.java",
+    "symbol": "Exsrc_Fatura",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Fatura",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.pagamento;\n\npublic class Fatura {",
+    "embed_key": "e804b0efa52c12e0c4adee86a37226d176d3c86dc85b17c7f7ea401077bbc708",
+    "embed_key_described": "a2e153025c27cbbbd0d4f4d5e50e56570d22e56fa3949df7bcbcf6797580e5d7",
+    "content_hash": "192608779be311b8",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Fatura.java\nclass: Exsrc_Fatura\nsymbol: Exsrc_Fatura\nlines: 1-3\n\npackage br.pagamento;\n\npublic class Fatura {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Fatura.java\nclass: Exsrc_Fatura\nsymbol: Exsrc_Fatura\nlines: 1-3\nsummary: Does a thing.\n\npackage br.pagamento;\n\npublic class Fatura {",
+    "chunk_id": "3ccfb7cf-09dd-5648-ba75-50627f718407"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Fatura.java",
+    "symbol": "Fatura.somarLancamentos",
+    "parent_symbol": "Fatura",
+    "class_name": "Fatura",
+    "start_line": 5,
+    "end_line": 10,
+    "text": "    /** Totaliza tudo o que foi cobrado no mês. */\n    public double somarLancamentos(List<Double> lancamentos) {\n        double soma = 0;\n        for (double l : lancamentos) soma += l;\n        return soma;\n    }",
+    "embed_key": "3b3b50c410a9d0c5dfe02bd5d71f55eaad67621c9a3a562d5c8242b0084e9fd7",
+    "embed_key_described": "4ad0e65c3a62257c69db0de3101abb5e08a5aaa96502db2cf23d331818d93fee",
+    "content_hash": "ae0d920c39965e2e",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Fatura.java\nclass: Fatura\nsymbol: Fatura.somarLancamentos\nlines: 5-10\n\n    /** Totaliza tudo o que foi cobrado no mês. */\n    public double somarLancamentos(List<Double> lancamentos) {\n        double soma = 0;\n        for (double l : lancamentos) soma += l;\n        return soma;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Fatura.java\nclass: Fatura\nsymbol: Fatura.somarLancamentos\nlines: 5-10\nsummary: Does a thing.\n\n    /** Totaliza tudo o que foi cobrado no mês. */\n    public double somarLancamentos(List<Double> lancamentos) {\n        double soma = 0;\n        for (double l : lancamentos) soma += l;\n        return soma;\n    }",
+    "chunk_id": "f14b2198-583e-50a6-8a3a-766cae439d90"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Fatura.java",
+    "symbol": "Fatura.fecharFatura",
+    "parent_symbol": "Fatura",
+    "class_name": "Fatura",
+    "start_line": 12,
+    "end_line": 16,
+    "text": "    public Fatura fecharFatura(String clienteId, YearMonth mes) {\n        Fatura f = abertas.remove(clienteId + mes);\n        f.fechar();\n        return f;\n    }",
+    "embed_key": "94847168a15b5594ddb6fc0f3026158c5e90e4314d87f3f1bc4f650b93f8e31c",
+    "embed_key_described": "7fe3c6ca048959b86e89f7cff4ec0e57c492fb358eb8b44428f9836e4d18d7c3",
+    "content_hash": "704ef7864c9c126e",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Fatura.java\nclass: Fatura\nsymbol: Fatura.fecharFatura\nlines: 12-16\n\n    public Fatura fecharFatura(String clienteId, YearMonth mes) {\n        Fatura f = abertas.remove(clienteId + mes);\n        f.fechar();\n        return f;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Fatura.java\nclass: Fatura\nsymbol: Fatura.fecharFatura\nlines: 12-16\nsummary: Does a thing.\n\n    public Fatura fecharFatura(String clienteId, YearMonth mes) {\n        Fatura f = abertas.remove(clienteId + mes);\n        f.fechar();\n        return f;\n    }",
+    "chunk_id": "d8c89380-9769-5b48-9c02-a5bdbead783d"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Fatura.java",
+    "symbol": "Fatura.gerarSegundaVia",
+    "parent_symbol": "Fatura",
+    "class_name": "Fatura",
+    "start_line": 18,
+    "end_line": 21,
+    "text": "    public byte[] gerarSegundaVia(String faturaId) {\n        Fatura f = repositorio.buscar(faturaId);\n        return renderizador.pdf(f);\n    }",
+    "embed_key": "2ee4dc9ad228e87acb149a838a44446c1c1af1549d12e102ca6727eebf9cfb67",
+    "embed_key_described": "d44ec7eb15221cb5eb81021764573eca7c8f8ed11aa1655e05b8f7d2b771a212",
+    "content_hash": "99b95d13aee4f881",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Fatura.java\nclass: Fatura\nsymbol: Fatura.gerarSegundaVia\nlines: 18-21\n\n    public byte[] gerarSegundaVia(String faturaId) {\n        Fatura f = repositorio.buscar(faturaId);\n        return renderizador.pdf(f);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Fatura.java\nclass: Fatura\nsymbol: Fatura.gerarSegundaVia\nlines: 18-21\nsummary: Does a thing.\n\n    public byte[] gerarSegundaVia(String faturaId) {\n        Fatura f = repositorio.buscar(faturaId);\n        return renderizador.pdf(f);\n    }",
+    "chunk_id": "1ffdafb9-6873-5792-9978-647b4e39383e"
+   }
+  ],
+  "Exsrc_Fornecedor.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Fornecedor.java",
+    "symbol": "Exsrc_Fornecedor",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Fornecedor",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.estoque;\n\npublic class Fornecedor {",
+    "embed_key": "825d5f266ed44d7efd2474fdcfaee95f7196253b31ca2c594b72fdb2e3955142",
+    "embed_key_described": "8759b9228e6fca4ffdf16c5b7d9a524b86d0fccb9ed4968aae3f17eca727d746",
+    "content_hash": "017d6d02573a47e0",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Fornecedor.java\nclass: Exsrc_Fornecedor\nsymbol: Exsrc_Fornecedor\nlines: 1-3\n\npackage br.estoque;\n\npublic class Fornecedor {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Fornecedor.java\nclass: Exsrc_Fornecedor\nsymbol: Exsrc_Fornecedor\nlines: 1-3\nsummary: Does a thing.\n\npackage br.estoque;\n\npublic class Fornecedor {",
+    "chunk_id": "607a5350-81de-5616-b21b-594c7a023a2c"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Fornecedor.java",
+    "symbol": "Fornecedor.avaliarFornecedor",
+    "parent_symbol": "Fornecedor",
+    "class_name": "Fornecedor",
+    "start_line": 5,
+    "end_line": 8,
+    "text": "    /** Nota de confiabilidade de quem vende para a loja. */\n    public double avaliarFornecedor(int entregasNoPrazo, int entregasTotais) {\n        return entregasTotais == 0 ? 0 : 100.0 * entregasNoPrazo / entregasTotais;\n    }",
+    "embed_key": "9418022afb739ea27f9c010a127c38d82663a0d19c84b82acb99828a1a835153",
+    "embed_key_described": "cf617aca4dd86fb0a0d5003e503581f440a6c8212def8201e6ce1bceb303c0cf",
+    "content_hash": "307062ba8ec27499",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Fornecedor.java\nclass: Fornecedor\nsymbol: Fornecedor.avaliarFornecedor\nlines: 5-8\n\n    /** Nota de confiabilidade de quem vende para a loja. */\n    public double avaliarFornecedor(int entregasNoPrazo, int entregasTotais) {\n        return entregasTotais == 0 ? 0 : 100.0 * entregasNoPrazo / entregasTotais;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Fornecedor.java\nclass: Fornecedor\nsymbol: Fornecedor.avaliarFornecedor\nlines: 5-8\nsummary: Does a thing.\n\n    /** Nota de confiabilidade de quem vende para a loja. */\n    public double avaliarFornecedor(int entregasNoPrazo, int entregasTotais) {\n        return entregasTotais == 0 ? 0 : 100.0 * entregasNoPrazo / entregasTotais;\n    }",
+    "chunk_id": "7f3aebb7-bbe3-5628-9bc5-d002b81999eb"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Fornecedor.java",
+    "symbol": "Fornecedor.gerarOrdemCompra",
+    "parent_symbol": "Fornecedor",
+    "class_name": "Fornecedor",
+    "start_line": 10,
+    "end_line": 14,
+    "text": "    public String gerarOrdemCompra(String fornecedorId, String sku, int quantidade) {\n        String numero = \"OC-\" + contador.incrementAndGet();\n        ordens.put(numero, new Ordem(fornecedorId, sku, quantidade));\n        return numero;\n    }",
+    "embed_key": "8c5b15e21da7a184ccc226515e9206756563a824f807066a6957bd849a3f70d7",
+    "embed_key_described": "270ff81de66e253e67f3328fbd28f676780fa9cb6abec8b4fe2cb1e71feee6db",
+    "content_hash": "6ebbfff7432c334d",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Fornecedor.java\nclass: Fornecedor\nsymbol: Fornecedor.gerarOrdemCompra\nlines: 10-14\n\n    public String gerarOrdemCompra(String fornecedorId, String sku, int quantidade) {\n        String numero = \"OC-\" + contador.incrementAndGet();\n        ordens.put(numero, new Ordem(fornecedorId, sku, quantidade));\n        return numero;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Fornecedor.java\nclass: Fornecedor\nsymbol: Fornecedor.gerarOrdemCompra\nlines: 10-14\nsummary: Does a thing.\n\n    public String gerarOrdemCompra(String fornecedorId, String sku, int quantidade) {\n        String numero = \"OC-\" + contador.incrementAndGet();\n        ordens.put(numero, new Ordem(fornecedorId, sku, quantidade));\n        return numero;\n    }",
+    "chunk_id": "9e425fc1-4fec-51e2-bcb6-b840da040b0f"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Fornecedor.java",
+    "symbol": "Fornecedor.compararCotacoes",
+    "parent_symbol": "Fornecedor",
+    "class_name": "Fornecedor",
+    "start_line": 16,
+    "end_line": 18,
+    "text": "    public double compararCotacoes(List<Double> precos) {\n        return Collections.min(precos);\n    }",
+    "embed_key": "547d90a664aa925fce05d9a3b610a04941d7a9956b08fea64115b4f38dff16c4",
+    "embed_key_described": "77a4f8122dd48a6982fa69fb90a90bc57eab364e424f0d7680c487b84cc712cc",
+    "content_hash": "2987ccc38904daf4",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Fornecedor.java\nclass: Fornecedor\nsymbol: Fornecedor.compararCotacoes\nlines: 16-18\n\n    public double compararCotacoes(List<Double> precos) {\n        return Collections.min(precos);\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Fornecedor.java\nclass: Fornecedor\nsymbol: Fornecedor.compararCotacoes\nlines: 16-18\nsummary: Does a thing.\n\n    public double compararCotacoes(List<Double> precos) {\n        return Collections.min(precos);\n    }",
+    "chunk_id": "3bcc0f4d-6ed0-534e-8b07-504b8a8becd6"
+   }
+  ],
+  "Exsrc_Frete.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Frete.java",
+    "symbol": "Exsrc_Frete",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Frete",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.estoque;\n\npublic class Frete {",
+    "embed_key": "b64fdafce4b695c6a3affebf6062a243140a7b3e08ed08b6de698fa2c2cec91a",
+    "embed_key_described": "abb721d9ce0ae3ae4bebd2ee7ae4ae6eca5e4cb4dfa171929dee43d4246aa872",
+    "content_hash": "9edd37857c83edcf",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Frete.java\nclass: Exsrc_Frete\nsymbol: Exsrc_Frete\nlines: 1-3\n\npackage br.estoque;\n\npublic class Frete {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Frete.java\nclass: Exsrc_Frete\nsymbol: Exsrc_Frete\nlines: 1-3\nsummary: Does a thing.\n\npackage br.estoque;\n\npublic class Frete {",
+    "chunk_id": "8e7f5244-0bed-56e9-bbcc-d532383dc729"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Frete.java",
+    "symbol": "Frete.calcularFrete",
+    "parent_symbol": "Frete",
+    "class_name": "Frete",
+    "start_line": 5,
+    "end_line": 8,
+    "text": "    /** Preço do transporte conforme o peso e a distância. */\n    public double calcularFrete(double pesoKg, double distanciaKm) {\n        return 5.0 + pesoKg * 0.8 + distanciaKm * 0.15;\n    }",
+    "embed_key": "5357ed97a803a18ce268c294c24999afb4252336c82884ad815ba6f01101509b",
+    "embed_key_described": "530e2ea42a8afb459080ac2613c44e9d96d58fb81daf54cf87cd011462fa44d3",
+    "content_hash": "5905aeb24c726d58",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Frete.java\nclass: Frete\nsymbol: Frete.calcularFrete\nlines: 5-8\n\n    /** Preço do transporte conforme o peso e a distância. */\n    public double calcularFrete(double pesoKg, double distanciaKm) {\n        return 5.0 + pesoKg * 0.8 + distanciaKm * 0.15;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Frete.java\nclass: Frete\nsymbol: Frete.calcularFrete\nlines: 5-8\nsummary: Does a thing.\n\n    /** Preço do transporte conforme o peso e a distância. */\n    public double calcularFrete(double pesoKg, double distanciaKm) {\n        return 5.0 + pesoKg * 0.8 + distanciaKm * 0.15;\n    }",
+    "chunk_id": "a7ce39b2-b83a-5cd5-8a1f-268fbd70a81e"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Frete.java",
+    "symbol": "Frete.estimarPrazoEntrega",
+    "parent_symbol": "Frete",
+    "class_name": "Frete",
+    "start_line": 10,
+    "end_line": 12,
+    "text": "    public int estimarPrazoEntrega(double distanciaKm) {\n        return (int) Math.ceil(distanciaKm / 400.0) + 1;\n    }",
+    "embed_key": "02fb3f1450277f41bf8f9b1d86c834e888923ff03b745f5b8894b01dd8e87604",
+    "embed_key_described": "1448415d3886ab0eade526e3d2a98bdd65790a8dc4e64f796b70b7ad1d51fd69",
+    "content_hash": "08d1ecb993581904",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Frete.java\nclass: Frete\nsymbol: Frete.estimarPrazoEntrega\nlines: 10-12\n\n    public int estimarPrazoEntrega(double distanciaKm) {\n        return (int) Math.ceil(distanciaKm / 400.0) + 1;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Frete.java\nclass: Frete\nsymbol: Frete.estimarPrazoEntrega\nlines: 10-12\nsummary: Does a thing.\n\n    public int estimarPrazoEntrega(double distanciaKm) {\n        return (int) Math.ceil(distanciaKm / 400.0) + 1;\n    }",
+    "chunk_id": "b3958071-363f-549a-9117-3d31cdaa19ed"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Frete.java",
+    "symbol": "Frete.escolherTransportadora",
+    "parent_symbol": "Frete",
+    "class_name": "Frete",
+    "start_line": 14,
+    "end_line": 16,
+    "text": "    public String escolherTransportadora(double pesoKg) {\n        return pesoKg > 30 ? \"RODOVIARIO\" : \"EXPRESSO\";\n    }",
+    "embed_key": "56561b73f138a7e11b45ff994ebe846804c55b9736d562e3e17f2099a6b6bd9a",
+    "embed_key_described": "066a4ace214680a10d2e03e780369b99767763bb8603f79e48f65507cf769d55",
+    "content_hash": "7e2b688b64b9fb42",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Frete.java\nclass: Frete\nsymbol: Frete.escolherTransportadora\nlines: 14-16\n\n    public String escolherTransportadora(double pesoKg) {\n        return pesoKg > 30 ? \"RODOVIARIO\" : \"EXPRESSO\";\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Frete.java\nclass: Frete\nsymbol: Frete.escolherTransportadora\nlines: 14-16\nsummary: Does a thing.\n\n    public String escolherTransportadora(double pesoKg) {\n        return pesoKg > 30 ? \"RODOVIARIO\" : \"EXPRESSO\";\n    }",
+    "chunk_id": "237f73fa-74e2-55c8-b50e-0cdb5f9b8865"
+   }
+  ],
+  "Exsrc_Pagamento.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Pagamento.java",
+    "symbol": "Exsrc_Pagamento",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Pagamento",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.pagamento;\n\npublic class Pagamento {",
+    "embed_key": "ccd9a68150e223568e72d8dad64484384db5d23fa06219b7d845d44814300325",
+    "embed_key_described": "1e412e937173b33a8a82777def0fdfe680003eb934cb3ef71833333ebd0862e0",
+    "content_hash": "142112ce6e2fb23f",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Pagamento.java\nclass: Exsrc_Pagamento\nsymbol: Exsrc_Pagamento\nlines: 1-3\n\npackage br.pagamento;\n\npublic class Pagamento {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Pagamento.java\nclass: Exsrc_Pagamento\nsymbol: Exsrc_Pagamento\nlines: 1-3\nsummary: Does a thing.\n\npackage br.pagamento;\n\npublic class Pagamento {",
+    "chunk_id": "403035de-12d5-56fa-b282-fac13c01215d"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Pagamento.java",
+    "symbol": "Pagamento.calcularJurosComposto",
+    "parent_symbol": "Pagamento",
+    "class_name": "Pagamento",
+    "start_line": 5,
+    "end_line": 8,
+    "text": "    /** Quanto um valor rende ao longo dos meses com taxa fixa. */\n    public double calcularJurosComposto(double valor, int meses) {\n        return valor * Math.pow(1.02, meses) - valor;\n    }",
+    "embed_key": "c95fceb025f86c8d4324ae9a280890ed669502d96867168e56b447e3547a4b16",
+    "embed_key_described": "fe87c7f89223b995ddeb567331ce30d72901b415ee77d74beeb3f0f37ecc51b6",
+    "content_hash": "9fc0b8f2fc6101b7",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.calcularJurosComposto\nlines: 5-8\n\n    /** Quanto um valor rende ao longo dos meses com taxa fixa. */\n    public double calcularJurosComposto(double valor, int meses) {\n        return valor * Math.pow(1.02, meses) - valor;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.calcularJurosComposto\nlines: 5-8\nsummary: Does a thing.\n\n    /** Quanto um valor rende ao longo dos meses com taxa fixa. */\n    public double calcularJurosComposto(double valor, int meses) {\n        return valor * Math.pow(1.02, meses) - valor;\n    }",
+    "chunk_id": "f3df1f90-b024-52ab-b882-31ca6ee923eb"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Pagamento.java",
+    "symbol": "Pagamento.estornarPagamento",
+    "parent_symbol": "Pagamento",
+    "class_name": "Pagamento",
+    "start_line": 10,
+    "end_line": 14,
+    "text": "    public boolean estornarPagamento(String contaId, double valor) {\n        if (valor <= 0) return false;\n        saldos.merge(contaId, valor, Double::sum);\n        return true;\n    }",
+    "embed_key": "e35e8bdf9b0120780a7ca466f46f3c4177f0e4a408bcc8eda3dcd45d13dbf4e5",
+    "embed_key_described": "cf33caece1a402d446af20440b119d09e9179b7fe64101cb1e49777db6e2bbd0",
+    "content_hash": "d371d85cbd3411b7",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.estornarPagamento\nlines: 10-14\n\n    public boolean estornarPagamento(String contaId, double valor) {\n        if (valor <= 0) return false;\n        saldos.merge(contaId, valor, Double::sum);\n        return true;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.estornarPagamento\nlines: 10-14\nsummary: Does a thing.\n\n    public boolean estornarPagamento(String contaId, double valor) {\n        if (valor <= 0) return false;\n        saldos.merge(contaId, valor, Double::sum);\n        return true;\n    }",
+    "chunk_id": "adf56069-2909-5c70-9c5e-18748dbac067"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Pagamento.java",
+    "symbol": "Pagamento.aplicarDesconto",
+    "parent_symbol": "Pagamento",
+    "class_name": "Pagamento",
+    "start_line": 16,
+    "end_line": 18,
+    "text": "    public double aplicarDesconto(double total, double percentual) {\n        return total - total * percentual / 100.0;\n    }",
+    "embed_key": "563d2660de4695c9b88eb9272cd87a56ea41400da3bb90eea08d80301707a53d",
+    "embed_key_described": "8a2e441f7cf50a465ea0d5ff4c1fb703be0caf361d709428b619d13004375622",
+    "content_hash": "96ef6137a38d3030",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.aplicarDesconto\nlines: 16-18\n\n    public double aplicarDesconto(double total, double percentual) {\n        return total - total * percentual / 100.0;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.aplicarDesconto\nlines: 16-18\nsummary: Does a thing.\n\n    public double aplicarDesconto(double total, double percentual) {\n        return total - total * percentual / 100.0;\n    }",
+    "chunk_id": "a1d44f92-f61f-5050-97c9-51c2744444e6"
+   }
+  ],
+  "Exsrc_Pedido.java": [
+   {
+    "source": "src/main/java/br/Exsrc_Pedido.java",
+    "symbol": "Exsrc_Pedido",
+    "parent_symbol": "",
+    "class_name": "Exsrc_Pedido",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.estoque;\n\npublic class Pedido {",
+    "embed_key": "84f5b6a8c10f687f52736f4d1a9855dc361dbba3b91b40870b4041abed6d7b11",
+    "embed_key_described": "fe4bd7150025ba09671459b4d2cbcc5d1459ebaa9b75b7d853334ecc8c2031e6",
+    "content_hash": "48f1691c803c9f5a",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Pedido.java\nclass: Exsrc_Pedido\nsymbol: Exsrc_Pedido\nlines: 1-3\n\npackage br.estoque;\n\npublic class Pedido {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Pedido.java\nclass: Exsrc_Pedido\nsymbol: Exsrc_Pedido\nlines: 1-3\nsummary: Does a thing.\n\npackage br.estoque;\n\npublic class Pedido {",
+    "chunk_id": "723ceabf-a420-5691-aa7a-563c18fbf4a7"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Pedido.java",
+    "symbol": "Pedido.calcularTotalPedido",
+    "parent_symbol": "Pedido",
+    "class_name": "Pedido",
+    "start_line": 5,
+    "end_line": 10,
+    "text": "    /** Soma preço vezes unidades de cada linha da compra. */\n    public double calcularTotalPedido(List<ItemPedido> itens) {\n        double total = 0;\n        for (ItemPedido i : itens) total += i.preco() * i.quantidade();\n        return total;\n    }",
+    "embed_key": "54d0ec284f9fc0c8f24aaa4f1a5e45008107deef4caee6ddc49f470b499a130b",
+    "embed_key_described": "611cd0be488a34a567028ff0a517d6cce195d2136d2a4cf6f36422e19a705b54",
+    "content_hash": "f6b1a7b74b3539ae",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Pedido.java\nclass: Pedido\nsymbol: Pedido.calcularTotalPedido\nlines: 5-10\n\n    /** Soma preço vezes unidades de cada linha da compra. */\n    public double calcularTotalPedido(List<ItemPedido> itens) {\n        double total = 0;\n        for (ItemPedido i : itens) total += i.preco() * i.quantidade();\n        return total;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Pedido.java\nclass: Pedido\nsymbol: Pedido.calcularTotalPedido\nlines: 5-10\nsummary: Does a thing.\n\n    /** Soma preço vezes unidades de cada linha da compra. */\n    public double calcularTotalPedido(List<ItemPedido> itens) {\n        double total = 0;\n        for (ItemPedido i : itens) total += i.preco() * i.quantidade();\n        return total;\n    }",
+    "chunk_id": "a7f4bfc0-89f0-5845-9b35-8fbb210ea83e"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Pedido.java",
+    "symbol": "Pedido.cancelarPedido",
+    "parent_symbol": "Pedido",
+    "class_name": "Pedido",
+    "start_line": 12,
+    "end_line": 17,
+    "text": "    public boolean cancelarPedido(String pedidoId) {\n        Pedido p = pedidos.get(pedidoId);\n        if (p.enviado()) return false;\n        p.cancelar();\n        return true;\n    }",
+    "embed_key": "aab3501d5bf90975be4e4c3678d55cfe1a5a45a2c42b16042fe87b03950a885c",
+    "embed_key_described": "221b5b23eb5c8ec488f55b21e6586a6fe9dcc35b135f5dfce5bf8388d4f59545",
+    "content_hash": "5420ee3bb443b30d",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Pedido.java\nclass: Pedido\nsymbol: Pedido.cancelarPedido\nlines: 12-17\n\n    public boolean cancelarPedido(String pedidoId) {\n        Pedido p = pedidos.get(pedidoId);\n        if (p.enviado()) return false;\n        p.cancelar();\n        return true;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Pedido.java\nclass: Pedido\nsymbol: Pedido.cancelarPedido\nlines: 12-17\nsummary: Does a thing.\n\n    public boolean cancelarPedido(String pedidoId) {\n        Pedido p = pedidos.get(pedidoId);\n        if (p.enviado()) return false;\n        p.cancelar();\n        return true;\n    }",
+    "chunk_id": "d140c68a-3a45-55a2-a727-ebd567f790b0"
+   },
+   {
+    "source": "src/main/java/br/Exsrc_Pedido.java",
+    "symbol": "Pedido.listarPedidosAtrasados",
+    "parent_symbol": "Pedido",
+    "class_name": "Pedido",
+    "start_line": 19,
+    "end_line": 21,
+    "text": "    public List<Pedido> listarPedidosAtrasados(LocalDate hoje) {\n        return pedidos.values().stream().filter(p -> p.previsao().isBefore(hoje)).toList();\n    }",
+    "embed_key": "64d6dd4701ec430f1d32bd6a15dc0be47db8db801af5b4165995915692aef589",
+    "embed_key_described": "5844ff425a46ad729ab38457a71a3293ac3a2b9688534a7df7d6393c3422f5c1",
+    "content_hash": "944f3e11989cfad4",
+    "embed_text": "repo: svc\npath: src/main/java/br/Exsrc_Pedido.java\nclass: Pedido\nsymbol: Pedido.listarPedidosAtrasados\nlines: 19-21\n\n    public List<Pedido> listarPedidosAtrasados(LocalDate hoje) {\n        return pedidos.values().stream().filter(p -> p.previsao().isBefore(hoje)).toList();\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Exsrc_Pedido.java\nclass: Pedido\nsymbol: Pedido.listarPedidosAtrasados\nlines: 19-21\nsummary: Does a thing.\n\n    public List<Pedido> listarPedidosAtrasados(LocalDate hoje) {\n        return pedidos.values().stream().filter(p -> p.previsao().isBefore(hoje)).toList();\n    }",
+    "chunk_id": "8f5eff38-881a-5a28-8c4a-3d2f6c1c54ef"
+   }
+  ],
+  "Longo.java": [
+   {
+    "source": "src/main/java/br/Longo.java",
+    "symbol": "Longo",
+    "parent_symbol": "",
+    "class_name": "Longo",
+    "start_line": 1,
+    "end_line": 3,
+    "text": "package br.longo;\n\npublic class Longo {",
+    "embed_key": "e86bf3bc5f8c2b4fa234db7cf5ef6066845477aafcce52a6271b8e5686bbfd4a",
+    "embed_key_described": "46940df79f320e7c6f0d1564fb7f2e2fa1d00f321be391703ab9d84fbc2559e5",
+    "content_hash": "83004f60150a8111",
+    "embed_text": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo\nlines: 1-3\n\npackage br.longo;\n\npublic class Longo {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo\nlines: 1-3\nsummary: Does a thing.\n\npackage br.longo;\n\npublic class Longo {",
+    "chunk_id": "e3247e82-835f-5eaa-a18f-555663b8f2dd"
+   },
+   {
+    "source": "src/main/java/br/Longo.java",
+    "symbol": "Longo.somar",
+    "parent_symbol": "Longo",
+    "class_name": "Longo",
+    "start_line": 5,
+    "end_line": 84,
+    "text": "    public long somar(long[] valores) {\n        long total = 0;\n        total += valores[0] * 1;  // passo 0\n        total += valores[1] * 2;  // passo 1\n        total += valores[2] * 3;  // passo 2\n        total += valores[3] * 4;  // passo 3\n        total += valores[4] * 5;  // passo 4\n        total += valores[5] * 6;  // passo 5\n        total += valores[6] * 7;  // passo 6\n        total += valores[7] * 8;  // passo 7\n        total += valores[8] * 9;  // passo 8\n        total += valores[9] * 10;  // passo 9\n        total += valores[10] * 11;  // passo 10\n        total += valores[11] * 12;  // passo 11\n        total += valores[12] * 13;  // passo 12\n        total += valores[13] * 14;  // passo 13\n        total += valores[14] * 15;  // passo 14\n        total += valores[15] * 16;  // passo 15\n        total += valores[16] * 17;  // passo 16\n        total += valores[17] * 18;  // passo 17\n        total += valores[18] * 19;  // passo 18\n        total += valores[19] * 20;  // passo 19\n        total += valores[20] * 21;  // passo 20\n        total += valores[21] * 22;  // passo 21\n        total += valores[22] * 23;  // passo 22\n        total += valores[23] * 24;  // passo 23\n        total += valores[24] * 25;  // passo 24\n        total += valores[25] * 26;  // passo 25\n        total += valores[26] * 27;  // passo 26\n        total += valores[27] * 28;  // passo 27\n        total += valores[28] * 29;  // passo 28\n        total += valores[29] * 30;  // passo 29\n        total += valores[30] * 31;  // passo 30\n        total += valores[31] * 32;  // passo 31\n        total += valores[32] * 33;  // passo 32\n        total += valores[33] * 34;  // passo 33\n        total += valores[34] * 35;  // passo 34\n        total += valores[35] * 36;  // passo 35\n        total += valores[36] * 37;  // passo 36\n        total += valores[37] * 38;  // passo 37\n        total += valores[38] * 39;  // passo 38\n        total += valores[39] * 40;  // passo 39\n        total += valores[40] * 41;  // passo 40\n        total += valores[41] * 42;  // passo 41\n        total += valores[42] * 43;  // passo 42\n        total += valores[43] * 44;  // passo 43\n        total += valores[44] * 45;  // passo 44\n        total += valores[45] * 46;  // passo 45\n        total += valores[46] * 47;  // passo 46\n        total += valores[47] * 48;  // passo 47\n        total += valores[48] * 49;  // passo 48\n        total += valores[49] * 50;  // passo 49\n        total += valores[50] * 51;  // passo 50\n        total += valores[51] * 52;  // passo 51\n        total += valores[52] * 53;  // passo 52\n        total += valores[53] * 54;  // passo 53\n        total += valores[54] * 55;  // passo 54\n        total += valores[55] * 56;  // passo 55\n        total += valores[56] * 57;  // passo 56\n        total += valores[57] * 58;  // passo 57\n        total += valores[58] * 59;  // passo 58\n        total += valores[59] * 60;  // passo 59\n        total += valores[60] * 61;  // passo 60\n        total += valores[61] * 62;  // passo 61\n        total += valores[62] * 63;  // passo 62\n        total += valores[63] * 64;  // passo 63\n        total += valores[64] * 65;  // passo 64\n        total += valores[65] * 66;  // passo 65\n        total += valores[66] * 67;  // passo 66\n        total += valores[67] * 68;  // passo 67\n        total += valores[68] * 69;  // passo 68\n        total += valores[69] * 70;  // passo 69\n        total += valores[70] * 71;  // passo 70\n        total += valores[71] * 72;  // passo 71\n        total += valores[72] * 73;  // passo 72\n        total += valores[73] * 74;  // passo 73\n        total += valores[74] * 75;  // passo 74\n        total += valores[75] * 76;  // passo 75\n        total += valores[76] * 77;  // passo 76\n        total += valores[77] * 78;  // passo 77",
+    "embed_key": "0feac15498a5d8ff05d1c5aa0748416a9af4497e62353558f28279532efe14ff",
+    "embed_key_described": "b39eee9a988cb09dc27ac3311af4af16e3acab7a175d01e1bc7ab6a7b1bf646b",
+    "content_hash": "49f3b212ae389d40",
+    "embed_text": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.somar\nlines: 5-84\n\n    public long somar(long[] valores) {\n        long total = 0;\n        total += valores[0] * 1;  // passo 0\n        total += valores[1] * 2;  // passo 1\n        total += valores[2] * 3;  // passo 2\n        total += valores[3] * 4;  // passo 3\n        total += valores[4] * 5;  // passo 4\n        total += valores[5] * 6;  // passo 5\n        total += valores[6] * 7;  // passo 6\n        total += valores[7] * 8;  // passo 7\n        total += valores[8] * 9;  // passo 8\n        total += valores[9] * 10;  // passo 9\n        total += valores[10] * 11;  // passo 10\n        total += valores[11] * 12;  // passo 11\n        total += valores[12] * 13;  // passo 12\n        total += valores[13] * 14;  // passo 13\n        total += valores[14] * 15;  // passo 14\n        total += valores[15] * 16;  // passo 15\n        total += valores[16] * 17;  // passo 16\n        total += valores[17] * 18;  // passo 17\n        total += valores[18] * 19;  // passo 18\n        total += valores[19] * 20;  // passo 19\n        total += valores[20] * 21;  // passo 20\n        total += valores[21] * 22;  // passo 21\n        total += valores[22] * 23;  // passo 22\n        total += valores[23] * 24;  // passo 23\n        total += valores[24] * 25;  // passo 24\n        total += valores[25] * 26;  // passo 25\n        total += valores[26] * 27;  // passo 26\n        total += valores[27] * 28;  // passo 27\n        total += valores[28] * 29;  // passo 28\n        total += valores[29] * 30;  // passo 29\n        total += valores[30] * 31;  // passo 30\n        total += valores[31] * 32;  // passo 31\n        total += valores[32] * 33;  // passo 32\n        total += valores[33] * 34;  // passo 33\n        total += valores[34] * 35;  // passo 34\n        total += valores[35] * 36;  // passo 35\n        total += valores[36] * 37;  // passo 36\n        total += valores[37] * 38;  // passo 37\n        total += valores[38] * 39;  // passo 38\n        total += valores[39] * 40;  // passo 39\n        total += valores[40] * 41;  // passo 40\n        total += valores[41] * 42;  // passo 41\n        total += valores[42] * 43;  // passo 42\n        total += valores[43] * 44;  // passo 43\n        total += valores[44] * 45;  // passo 44\n        total += valores[45] * 46;  // passo 45\n        total += valores[46] * 47;  // passo 46\n        total += valores[47] * 48;  // passo 47\n        total += valores[48] * 49;  // passo 48\n        total += valores[49] * 50;  // passo 49\n        total += valores[50] * 51;  // passo 50\n        total += valores[51] * 52;  // passo 51\n        total += valores[52] * 53;  // passo 52\n        total += valores[53] * 54;  // passo 53\n        total += valores[54] * 55;  // passo 54\n        total += valores[55] * 56;  // passo 55\n        total += valores[56] * 57;  // passo 56\n        total += valores[57] * 58;  // passo 57\n        total += valores[58] * 59;  // passo 58\n        total += valores[59] * 60;  // passo 59\n        total += valores[60] * 61;  // passo 60\n        total += valores[61] * 62;  // passo 61\n        total += valores[62] * 63;  // passo 62\n        total += valores[63] * 64;  // passo 63\n        total += valores[64] * 65;  // passo 64\n        total += valores[65] * 66;  // passo 65\n        total += valores[66] * 67;  // passo 66\n        total += valores[67] * 68;  // passo 67\n        total += valores[68] * 69;  // passo 68\n        total += valores[69] * 70;  // passo 69\n        total += valores[70] * 71;  // passo 70\n        total += valores[71] * 72;  // passo 71\n        total += valores[72] * 73;  // passo 72\n        total += valores[73] * 74;  // passo 73\n        total += valores[74] * 75;  // passo 74\n        total += valores[75] * 76;  // passo 75\n        total += valores[76] * 77;  // passo 76\n        total += valores[77] * 78;  // passo 77",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.somar\nlines: 5-84\nsummary: Does a thing.\n\n    public long somar(long[] valores) {\n        long total = 0;\n        total += valores[0] * 1;  // passo 0\n        total += valores[1] * 2;  // passo 1\n        total += valores[2] * 3;  // passo 2\n        total += valores[3] * 4;  // passo 3\n        total += valores[4] * 5;  // passo 4\n        total += valores[5] * 6;  // passo 5\n        total += valores[6] * 7;  // passo 6\n        total += valores[7] * 8;  // passo 7\n        total += valores[8] * 9;  // passo 8\n        total += valores[9] * 10;  // passo 9\n        total += valores[10] * 11;  // passo 10\n        total += valores[11] * 12;  // passo 11\n        total += valores[12] * 13;  // passo 12\n        total += valores[13] * 14;  // passo 13\n        total += valores[14] * 15;  // passo 14\n        total += valores[15] * 16;  // passo 15\n        total += valores[16] * 17;  // passo 16\n        total += valores[17] * 18;  // passo 17\n        total += valores[18] * 19;  // passo 18\n        total += valores[19] * 20;  // passo 19\n        total += valores[20] * 21;  // passo 20\n        total += valores[21] * 22;  // passo 21\n        total += valores[22] * 23;  // passo 22\n        total += valores[23] * 24;  // passo 23\n        total += valores[24] * 25;  // passo 24\n        total += valores[25] * 26;  // passo 25\n        total += valores[26] * 27;  // passo 26\n        total += valores[27] * 28;  // passo 27\n        total += valores[28] * 29;  // passo 28\n        total += valores[29] * 30;  // passo 29\n        total += valores[30] * 31;  // passo 30\n        total += valores[31] * 32;  // passo 31\n        total += valores[32] * 33;  // passo 32\n        total += valores[33] * 34;  // passo 33\n        total += valores[34] * 35;  // passo 34\n        total += valores[35] * 36;  // passo 35\n        total += valores[36] * 37;  // passo 36\n        total += valores[37] * 38;  // passo 37\n        total += valores[38] * 39;  // passo 38\n        total += valores[39] * 40;  // passo 39\n        total += valores[40] * 41;  // passo 40\n        total += valores[41] * 42;  // passo 41\n        total += valores[42] * 43;  // passo 42\n        total += valores[43] * 44;  // passo 43\n        total += valores[44] * 45;  // passo 44\n        total += valores[45] * 46;  // passo 45\n        total += valores[46] * 47;  // passo 46\n        total += valores[47] * 48;  // passo 47\n        total += valores[48] * 49;  // passo 48\n        total += valores[49] * 50;  // passo 49\n        total += valores[50] * 51;  // passo 50\n        total += valores[51] * 52;  // passo 51\n        total += valores[52] * 53;  // passo 52\n        total += valores[53] * 54;  // passo 53\n        total += valores[54] * 55;  // passo 54\n        total += valores[55] * 56;  // passo 55\n        total += valores[56] * 57;  // passo 56\n        total += valores[57] * 58;  // passo 57\n        total += valores[58] * 59;  // passo 58\n        total += valores[59] * 60;  // passo 59\n        total += valores[60] * 61;  // passo 60\n        total += valores[61] * 62;  // passo 61\n        total += valores[62] * 63;  // passo 62\n        total += valores[63] * 64;  // passo 63\n        total += valores[64] * 65;  // passo 64\n        total += valores[65] * 66;  // passo 65\n        total += valores[66] * 67;  // passo 66\n        total += valores[67] * 68;  // passo 67\n        total += valores[68] * 69;  // passo 68\n        total += valores[69] * 70;  // passo 69\n        total += valores[70] * 71;  // passo 70\n        total += valores[71] * 72;  // passo 71\n        total += valores[72] * 73;  // passo 72\n        total += valores[73] * 74;  // passo 73\n        total += valores[74] * 75;  // passo 74\n        total += valores[75] * 76;  // passo 75\n        total += valores[76] * 77;  // passo 76\n        total += valores[77] * 78;  // passo 77",
+    "chunk_id": "8aeb350e-96a6-5ca9-a7f6-58d82d3cae6b"
+   },
+   {
+    "source": "src/main/java/br/Longo.java",
+    "symbol": "Longo.somar",
+    "parent_symbol": "Longo",
+    "class_name": "Longo",
+    "start_line": 75,
+    "end_line": 103,
+    "text": "        total += valores[68] * 69;  // passo 68\n        total += valores[69] * 70;  // passo 69\n        total += valores[70] * 71;  // passo 70\n        total += valores[71] * 72;  // passo 71\n        total += valores[72] * 73;  // passo 72\n        total += valores[73] * 74;  // passo 73\n        total += valores[74] * 75;  // passo 74\n        total += valores[75] * 76;  // passo 75\n        total += valores[76] * 77;  // passo 76\n        total += valores[77] * 78;  // passo 77\n        total += valores[78] * 79;  // passo 78\n        total += valores[79] * 80;  // passo 79\n        total += valores[80] * 81;  // passo 80\n        total += valores[81] * 82;  // passo 81\n        total += valores[82] * 83;  // passo 82\n        total += valores[83] * 84;  // passo 83\n        total += valores[84] * 85;  // passo 84\n        total += valores[85] * 86;  // passo 85\n        total += valores[86] * 87;  // passo 86\n        total += valores[87] * 88;  // passo 87\n        total += valores[88] * 89;  // passo 88\n        total += valores[89] * 90;  // passo 89\n        total += valores[90] * 91;  // passo 90\n        total += valores[91] * 92;  // passo 91\n        total += valores[92] * 93;  // passo 92\n        total += valores[93] * 94;  // passo 93\n        total += valores[94] * 95;  // passo 94\n        return total;\n    }",
+    "embed_key": "8044f3ef44cd54699af66659588c516e70d6cd95225c8da4839da5e43e8e5956",
+    "embed_key_described": "87110eda2ccaa87fb6b5ed6ae8379f4e026339813225e2bec8cd98f65798b7cc",
+    "content_hash": "b406aa0e6aafadb5",
+    "embed_text": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.somar\nlines: 75-103\n\n        total += valores[68] * 69;  // passo 68\n        total += valores[69] * 70;  // passo 69\n        total += valores[70] * 71;  // passo 70\n        total += valores[71] * 72;  // passo 71\n        total += valores[72] * 73;  // passo 72\n        total += valores[73] * 74;  // passo 73\n        total += valores[74] * 75;  // passo 74\n        total += valores[75] * 76;  // passo 75\n        total += valores[76] * 77;  // passo 76\n        total += valores[77] * 78;  // passo 77\n        total += valores[78] * 79;  // passo 78\n        total += valores[79] * 80;  // passo 79\n        total += valores[80] * 81;  // passo 80\n        total += valores[81] * 82;  // passo 81\n        total += valores[82] * 83;  // passo 82\n        total += valores[83] * 84;  // passo 83\n        total += valores[84] * 85;  // passo 84\n        total += valores[85] * 86;  // passo 85\n        total += valores[86] * 87;  // passo 86\n        total += valores[87] * 88;  // passo 87\n        total += valores[88] * 89;  // passo 88\n        total += valores[89] * 90;  // passo 89\n        total += valores[90] * 91;  // passo 90\n        total += valores[91] * 92;  // passo 91\n        total += valores[92] * 93;  // passo 92\n        total += valores[93] * 94;  // passo 93\n        total += valores[94] * 95;  // passo 94\n        return total;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.somar\nlines: 75-103\nsummary: Does a thing.\n\n        total += valores[68] * 69;  // passo 68\n        total += valores[69] * 70;  // passo 69\n        total += valores[70] * 71;  // passo 70\n        total += valores[71] * 72;  // passo 71\n        total += valores[72] * 73;  // passo 72\n        total += valores[73] * 74;  // passo 73\n        total += valores[74] * 75;  // passo 74\n        total += valores[75] * 76;  // passo 75\n        total += valores[76] * 77;  // passo 76\n        total += valores[77] * 78;  // passo 77\n        total += valores[78] * 79;  // passo 78\n        total += valores[79] * 80;  // passo 79\n        total += valores[80] * 81;  // passo 80\n        total += valores[81] * 82;  // passo 81\n        total += valores[82] * 83;  // passo 82\n        total += valores[83] * 84;  // passo 83\n        total += valores[84] * 85;  // passo 84\n        total += valores[85] * 86;  // passo 85\n        total += valores[86] * 87;  // passo 86\n        total += valores[87] * 88;  // passo 87\n        total += valores[88] * 89;  // passo 88\n        total += valores[89] * 90;  // passo 89\n        total += valores[90] * 91;  // passo 90\n        total += valores[91] * 92;  // passo 91\n        total += valores[92] * 93;  // passo 92\n        total += valores[93] * 94;  // passo 93\n        total += valores[94] * 95;  // passo 94\n        return total;\n    }",
+    "chunk_id": "8f166f98-ccda-5fd6-888f-b35ee9e5f754"
+   },
+   {
+    "source": "src/main/java/br/Longo.java",
+    "symbol": "Longo.gigante",
+    "parent_symbol": "Longo",
+    "class_name": "Longo",
+    "start_line": 105,
+    "end_line": 105,
+    "text": "    public String gigante() {",
+    "embed_key": "06c196a2c9f96a4db1eceb9aef5fa544d6a120e4db6028a95b12e60aed75124e",
+    "embed_key_described": "0d720b1260fcbeced534b24e382a1cd082549a3df804ad1a36e3d2516d80beec",
+    "content_hash": "7aee5d71240d3cc4",
+    "embed_text": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.gigante\nlines: 105-105\n\n    public String gigante() {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.gigante\nlines: 105-105\nsummary: Does a thing.\n\n    public String gigante() {",
+    "chunk_id": "e9f48a4e-e2ca-5dc8-af0b-9df1ffb5ac9a"
+   },
+   {
+    "source": "src/main/java/br/Longo.java",
+    "symbol": "Longo.gigante",
+    "parent_symbol": "Longo",
+    "class_name": "Longo",
+    "start_line": 106,
+    "end_line": 106,
+    "text": "        return \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "embed_key": "643cb97e329b28547915927bcb98ab68019f3306b67be148182457fdab40df07",
+    "embed_key_described": "1f47a0f9af23b1e0a57b39dba952837e8fff3b3a0a71a9fff710a21c15cf5075",
+    "content_hash": "647ac25a3863f25d",
+    "embed_text": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.gigante\nlines: 106-106\n\n        return \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.gigante\nlines: 106-106\nsummary: Does a thing.\n\n        return \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "chunk_id": "faabeca1-e26f-5345-b10f-da84e07f87a8"
+   },
+   {
+    "source": "src/main/java/br/Longo.java",
+    "symbol": "Longo.gigante",
+    "parent_symbol": "Longo",
+    "class_name": "Longo",
+    "start_line": 106,
+    "end_line": 106,
+    "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\";",
+    "embed_key": "34324a12494bf72766062744f2ca8847bc8d5ff7d7f12de4d2deae3423620878",
+    "embed_key_described": "bda4fcbc98d658d54942f2f6b101f3380494517a42af4600cbb6ca16f631b87e",
+    "content_hash": "a50aa46eea341b32",
+    "embed_text": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.gigante\nlines: 106-106\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\";",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.gigante\nlines: 106-106\nsummary: Does a thing.\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\";",
+    "chunk_id": "9462944c-315f-51b3-a109-1d3f45b9f325"
+   },
+   {
+    "source": "src/main/java/br/Longo.java",
+    "symbol": "Longo.gigante",
+    "parent_symbol": "Longo",
+    "class_name": "Longo",
+    "start_line": 107,
+    "end_line": 107,
+    "text": "    }",
+    "embed_key": "c44bb51ed2d095aa13ef973c93eee581d6600e29c44c36a9cc79f27abe1d5286",
+    "embed_key_described": "28fbbb520f32bd3b0f4c25ab4b1247eb6b8b8156f6364819f4d9ae457a69b3b9",
+    "content_hash": "28d86778615f6af4",
+    "embed_text": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.gigante\nlines: 107-107\n\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Longo.java\nclass: Longo\nsymbol: Longo.gigante\nlines: 107-107\nsummary: Does a thing.\n\n    }",
+    "chunk_id": "a768020f-40cb-5d1d-8393-37395d854f83"
+   }
+  ],
+  "Misto.java": [
+   {
+    "source": "src/main/java/br/Misto.java",
+    "symbol": "Misto",
+    "parent_symbol": "",
+    "class_name": "Misto",
+    "start_line": 1,
+    "end_line": 6,
+    "text": "package br.misto;\n\npublic class Misto {\n    private static final String SQL = \"\"\"\n        select * from t where x = '{' and y = \"}\"\n        \"\"\";",
+    "embed_key": "e1a258873e771266e688e9b46079c40947cf32b25ca2b073ffd71b6f866e7775",
+    "embed_key_described": "d3981b258f78047c2cac13e214d4497732075c43e31dfb7b7282ba3138a264b0",
+    "content_hash": "9d9cd99f2b27ae05",
+    "embed_text": "repo: svc\npath: src/main/java/br/Misto.java\nclass: Misto\nsymbol: Misto\nlines: 1-6\n\npackage br.misto;\n\npublic class Misto {\n    private static final String SQL = \"\"\"\n        select * from t where x = '{' and y = \"}\"\n        \"\"\";",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Misto.java\nclass: Misto\nsymbol: Misto\nlines: 1-6\nsummary: Does a thing.\n\npackage br.misto;\n\npublic class Misto {\n    private static final String SQL = \"\"\"\n        select * from t where x = '{' and y = \"}\"\n        \"\"\";",
+    "chunk_id": "6973b975-b22f-501f-85ad-815ac6807a3e"
+   },
+   {
+    "source": "src/main/java/br/Misto.java",
+    "symbol": "Misto.descrição",
+    "parent_symbol": "Misto",
+    "class_name": "Misto",
+    "start_line": 8,
+    "end_line": 10,
+    "text": "    public String descrição(String ação) {\n        return ação + SQL;\n    }",
+    "embed_key": "8c2356b61e3fa22f69868dcfd563f33d16484f8a5a2e22cb5b9bb47cacc098da",
+    "embed_key_described": "d75e5eb5b07f57df1877455cf4e136eff7cb101bf827322bbbeea662e1e49baa",
+    "content_hash": "dc21bddf04f08680",
+    "embed_text": "repo: svc\npath: src/main/java/br/Misto.java\nclass: Misto\nsymbol: Misto.descrição\nlines: 8-10\n\n    public String descrição(String ação) {\n        return ação + SQL;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Misto.java\nclass: Misto\nsymbol: Misto.descrição\nlines: 8-10\nsummary: Does a thing.\n\n    public String descrição(String ação) {\n        return ação + SQL;\n    }",
+    "chunk_id": "bf14e088-a2f8-5260-b542-dc9b138a2954"
+   },
+   {
+    "source": "src/main/java/br/Misto.java",
+    "symbol": "Misto.emoji",
+    "parent_symbol": "Misto",
+    "class_name": "Misto",
+    "start_line": 12,
+    "end_line": 14,
+    "text": "    public void emoji() {\n        String s = \"😀 ok\"; int ação2 = 1;\n    }",
+    "embed_key": "df0d5d8a9ac14a856c32ed610e57c0fbbd07fc70fc2d0ac3736613b661b0b2c8",
+    "embed_key_described": "bc344446b4b682b456dedfa2ebb8f1e0588d937c968b81a3f6591ed93f1f3b7a",
+    "content_hash": "1b543f886dcd90df",
+    "embed_text": "repo: svc\npath: src/main/java/br/Misto.java\nclass: Misto\nsymbol: Misto.emoji\nlines: 12-14\n\n    public void emoji() {\n        String s = \"😀 ok\"; int ação2 = 1;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Misto.java\nclass: Misto\nsymbol: Misto.emoji\nlines: 12-14\nsummary: Does a thing.\n\n    public void emoji() {\n        String s = \"😀 ok\"; int ação2 = 1;\n    }",
+    "chunk_id": "bfbd3b42-a0da-52f4-8f54-f74b0d53e96c"
+   }
+  ],
+  "Pagamento.java": [
+   {
+    "source": "src/main/java/br/Pagamento.java",
+    "symbol": "Pagamento",
+    "parent_symbol": "",
+    "class_name": "Pagamento",
+    "start_line": 1,
+    "end_line": 10,
+    "text": "package br.pagamento;\n\nimport java.math.BigDecimal;\nimport java.util.List;\n\n/** Serviço de pagamentos. */\npublic class Pagamento {\n\n    private static final String PREFIXO = \"PG{\";\n    private final List<String> historico = new java.util.ArrayList<>();",
+    "embed_key": "77c3efa673e35b78a00bf36375cf9195683ea295c7afbaf3d87efe650c507bc0",
+    "embed_key_described": "0c3c4e0fd1412c2ec5e6d2d458fd94172497111e57961d5587626f43360d1997",
+    "content_hash": "2fa7bb3376e3027b",
+    "embed_text": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento\nlines: 1-10\n\npackage br.pagamento;\n\nimport java.math.BigDecimal;\nimport java.util.List;\n\n/** Serviço de pagamentos. */\npublic class Pagamento {\n\n    private static final String PREFIXO = \"PG{\";\n    private final List<String> historico = new java.util.ArrayList<>();",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento\nlines: 1-10\nsummary: Does a thing.\n\npackage br.pagamento;\n\nimport java.math.BigDecimal;\nimport java.util.List;\n\n/** Serviço de pagamentos. */\npublic class Pagamento {\n\n    private static final String PREFIXO = \"PG{\";\n    private final List<String> historico = new java.util.ArrayList<>();",
+    "chunk_id": "d0bdcf58-9310-5084-933d-a27a94c6d8cb"
+   },
+   {
+    "source": "src/main/java/br/Pagamento.java",
+    "symbol": "Pagamento.calcularJurosComposto",
+    "parent_symbol": "Pagamento",
+    "class_name": "Pagamento",
+    "start_line": 12,
+    "end_line": 15,
+    "text": "    /** Calcula juros compostos da parcela. */\n    public double calcularJurosComposto(double valor, int meses) {\n        return valor * Math.pow(1.02, meses) - valor;\n    }",
+    "embed_key": "b08fc906102125238ccfcfec37f434796305af084348da18c842ae6a1959a1ac",
+    "embed_key_described": "53a206fa5db0744ffb53b7a74eb907ea72800181672d72fd7c0734264a7d0aea",
+    "content_hash": "724dfc2ba09ddf19",
+    "embed_text": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.calcularJurosComposto\nlines: 12-15\n\n    /** Calcula juros compostos da parcela. */\n    public double calcularJurosComposto(double valor, int meses) {\n        return valor * Math.pow(1.02, meses) - valor;\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.calcularJurosComposto\nlines: 12-15\nsummary: Does a thing.\n\n    /** Calcula juros compostos da parcela. */\n    public double calcularJurosComposto(double valor, int meses) {\n        return valor * Math.pow(1.02, meses) - valor;\n    }",
+    "chunk_id": "ac808345-0ab4-56ab-8770-933922108a09"
+   },
+   {
+    "source": "src/main/java/br/Pagamento.java",
+    "symbol": "Pagamento.estornar",
+    "parent_symbol": "Pagamento",
+    "class_name": "Pagamento",
+    "start_line": 17,
+    "end_line": 22,
+    "text": "    public void estornar(String contaId) {\n        if (contaId == null) {\n            throw new IllegalArgumentException(\"conta {inválida}\");\n        }\n        historico.add(\"estorno \" + contaId); // fecha } no comentário\n    }",
+    "embed_key": "4170d5780a84a46a266981e6e3d78915881b5cf1e97f93fc9dd940769cc6ff8d",
+    "embed_key_described": "28f16ba4faf754ebd4969551eee1e523995927f38f8147018b15c29e92e87872",
+    "content_hash": "d7d46122f6649907",
+    "embed_text": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.estornar\nlines: 17-22\n\n    public void estornar(String contaId) {\n        if (contaId == null) {\n            throw new IllegalArgumentException(\"conta {inválida}\");\n        }\n        historico.add(\"estorno \" + contaId); // fecha } no comentário\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.estornar\nlines: 17-22\nsummary: Does a thing.\n\n    public void estornar(String contaId) {\n        if (contaId == null) {\n            throw new IllegalArgumentException(\"conta {inválida}\");\n        }\n        historico.add(\"estorno \" + contaId); // fecha } no comentário\n    }",
+    "chunk_id": "73cd5db5-b4b0-5917-880b-de3c317d15e9"
+   },
+   {
+    "source": "src/main/java/br/Pagamento.java",
+    "symbol": "Pagamento.toString",
+    "parent_symbol": "Pagamento",
+    "class_name": "Pagamento",
+    "start_line": 24,
+    "end_line": 27,
+    "text": "    @Override\n    public String toString() {\n        return \"Pagamento[\" + historico.size() + \"]\";\n    }",
+    "embed_key": "80f80c588f7f0fb2301d113f786b571059bf55baf3cd75e1af64af87197e3b56",
+    "embed_key_described": "9557be11a274669c7f53ac9975ca1d79ca547cbac5564575d56e58b93f5fe338",
+    "content_hash": "c8e39afd4e1b1687",
+    "embed_text": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.toString\nlines: 24-27\n\n    @Override\n    public String toString() {\n        return \"Pagamento[\" + historico.size() + \"]\";\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento.toString\nlines: 24-27\nsummary: Does a thing.\n\n    @Override\n    public String toString() {\n        return \"Pagamento[\" + historico.size() + \"]\";\n    }",
+    "chunk_id": "81a462ff-a3e1-51b6-b083-77d27f32bb2d"
+   },
+   {
+    "source": "src/main/java/br/Pagamento.java",
+    "symbol": "Pagamento",
+    "parent_symbol": "",
+    "class_name": "Pagamento",
+    "start_line": 29,
+    "end_line": 33,
+    "text": "    static {\n        System.setProperty(\"pagamento.init\", \"true\");\n    }\n\n    public static class Boleto {",
+    "embed_key": "599ce0f6efe12ee185f2c7a8269c7561e62757bd6055e2450cba38693adae822",
+    "embed_key_described": "978dcad6d13c365bb6155c78be0ad974005f163d49c8b31e0c047296251a3cc8",
+    "content_hash": "9b11c44291dec5ea",
+    "embed_text": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento\nlines: 29-33\n\n    static {\n        System.setProperty(\"pagamento.init\", \"true\");\n    }\n\n    public static class Boleto {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Pagamento\nsymbol: Pagamento\nlines: 29-33\nsummary: Does a thing.\n\n    static {\n        System.setProperty(\"pagamento.init\", \"true\");\n    }\n\n    public static class Boleto {",
+    "chunk_id": "144fc630-0e32-5bb0-a786-9ed572dbdc92"
+   },
+   {
+    "source": "src/main/java/br/Pagamento.java",
+    "symbol": "Pagamento.Boleto.gerarLinhaDigitavel",
+    "parent_symbol": "Pagamento.Boleto",
+    "class_name": "Boleto",
+    "start_line": 34,
+    "end_line": 36,
+    "text": "        public String gerarLinhaDigitavel(String codigo) {\n            return codigo.replace(\".\", \"\").substring(0, 10);\n        }",
+    "embed_key": "64bcce27e69f7b3b82becc18b32095d3fc8dacf4156b61188545e6d1e548c31b",
+    "embed_key_described": "cd3a89c7ddcfd2c1c593c3070fd11a7fc79ff8fa3cd9307acf4432d5157bfbf7",
+    "content_hash": "1a06ab35a03f74e1",
+    "embed_text": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Boleto\nsymbol: Pagamento.Boleto.gerarLinhaDigitavel\nlines: 34-36\n\n        public String gerarLinhaDigitavel(String codigo) {\n            return codigo.replace(\".\", \"\").substring(0, 10);\n        }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Boleto\nsymbol: Pagamento.Boleto.gerarLinhaDigitavel\nlines: 34-36\nsummary: Does a thing.\n\n        public String gerarLinhaDigitavel(String codigo) {\n            return codigo.replace(\".\", \"\").substring(0, 10);\n        }",
+    "chunk_id": "e4c0de76-f456-5d9f-ac23-73fbc524f9f5"
+   },
+   {
+    "source": "src/main/java/br/Pagamento.java",
+    "symbol": "Pagamento.Boleto.Boleto",
+    "parent_symbol": "Pagamento.Boleto",
+    "class_name": "Boleto",
+    "start_line": 38,
+    "end_line": 39,
+    "text": "        public Boleto() {\n        }",
+    "embed_key": "8d683cfb130b430172ca971dceca6916757d8bdbea3cbfb825962a21bf3f60a4",
+    "embed_key_described": "89fee4e1169017b4b31370327534bae6265377db71180e53d9b1b01d191f6153",
+    "content_hash": "46a92cdcfe207f5e",
+    "embed_text": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Boleto\nsymbol: Pagamento.Boleto.Boleto\nlines: 38-39\n\n        public Boleto() {\n        }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Pagamento.java\nclass: Boleto\nsymbol: Pagamento.Boleto.Boleto\nlines: 38-39\nsummary: Does a thing.\n\n        public Boleto() {\n        }",
+    "chunk_id": "2c296560-62d5-56de-ae5a-e5afd75cf2f8"
+   }
+  ],
+  "Tipos.java": [
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos",
+    "parent_symbol": "",
+    "class_name": "Tipos",
+    "start_line": 1,
+    "end_line": 5,
+    "text": "package br.tipos;\n\nimport java.util.function.Function;\n\npublic interface Tipos {",
+    "embed_key": "aa01b4680544424ebb6d27bb591529d810614621fba3b2a0ae4a882acad54c21",
+    "embed_key_described": "d3ec1fdc309bcbcec3628ed03c6c402d248a2b84d2395614f28490c0b9fd155a",
+    "content_hash": "05582af5b6a2a467",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Tipos\nsymbol: Tipos\nlines: 1-5\n\npackage br.tipos;\n\nimport java.util.function.Function;\n\npublic interface Tipos {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Tipos\nsymbol: Tipos\nlines: 1-5\nsummary: Does a thing.\n\npackage br.tipos;\n\nimport java.util.function.Function;\n\npublic interface Tipos {",
+    "chunk_id": "c70a7cd9-d9aa-566f-b1a6-6d1ac256bc44"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.contar",
+    "parent_symbol": "Tipos",
+    "class_name": "Tipos",
+    "start_line": 7,
+    "end_line": 7,
+    "text": "    int contar(String texto);",
+    "embed_key": "0ba32a0a8afc7baddbadcc53af60bfe855b181b7f01e363954f645e8c8351e68",
+    "embed_key_described": "1bbe317916fa69364d054b047ae588865c07fb25fe2f326dcb2e147ce52367e5",
+    "content_hash": "3423e2b2168f1b97",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Tipos\nsymbol: Tipos.contar\nlines: 7-7\n\n    int contar(String texto);",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Tipos\nsymbol: Tipos.contar\nlines: 7-7\nsummary: Does a thing.\n\n    int contar(String texto);",
+    "chunk_id": "4d7a1cf3-f212-5ad3-98eb-7361a3b4d777"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.nome",
+    "parent_symbol": "Tipos",
+    "class_name": "Tipos",
+    "start_line": 9,
+    "end_line": 11,
+    "text": "    default String nome() {\n        return \"tipos\";\n    }",
+    "embed_key": "56dbd78fb74e1ff3f00b74651be7cc2f731faf59c5abb2c8e36b7aae2cf73016",
+    "embed_key_described": "6a8cef178c54ddf92090fa7165e2a695ad1101fc4cbc49205036453fcd75e72d",
+    "content_hash": "06879075ef2fbcdb",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Tipos\nsymbol: Tipos.nome\nlines: 9-11\n\n    default String nome() {\n        return \"tipos\";\n    }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Tipos\nsymbol: Tipos.nome\nlines: 9-11\nsummary: Does a thing.\n\n    default String nome() {\n        return \"tipos\";\n    }",
+    "chunk_id": "3203f215-7478-583a-a22d-cb65b5dbd3f9"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Nivel",
+    "parent_symbol": "",
+    "class_name": "Nivel",
+    "start_line": 13,
+    "end_line": 22,
+    "text": "    enum Nivel {\n        BAIXO(1), MEDIO(2) {\n            @Override\n            public int peso() {\n                return 20;\n            }\n        },\n        ALTO(3);\n\n        private final int valor;",
+    "embed_key": "0125db07cf14fb892da2075d2cf155c40c665d51ab26a269252edc7bbe64b3cd",
+    "embed_key_described": "42fda2769305d21692e7f474490b02985c14c9625b342a7c5850a3cee9759467",
+    "content_hash": "a75bee71d106943a",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Nivel\nsymbol: Tipos.Nivel\nlines: 13-22\n\n    enum Nivel {\n        BAIXO(1), MEDIO(2) {\n            @Override\n            public int peso() {\n                return 20;\n            }\n        },\n        ALTO(3);\n\n        private final int valor;",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Nivel\nsymbol: Tipos.Nivel\nlines: 13-22\nsummary: Does a thing.\n\n    enum Nivel {\n        BAIXO(1), MEDIO(2) {\n            @Override\n            public int peso() {\n                return 20;\n            }\n        },\n        ALTO(3);\n\n        private final int valor;",
+    "chunk_id": "40fd4426-bf9a-5ef1-9c73-ffcec8776144"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Nivel.Nivel",
+    "parent_symbol": "Tipos.Nivel",
+    "class_name": "Nivel",
+    "start_line": 24,
+    "end_line": 26,
+    "text": "        Nivel(int valor) {\n            this.valor = valor;\n        }",
+    "embed_key": "ac79681f05f99ab13502e71fbbbf54041a61ea8a74a0ef4c73ad957aba144a44",
+    "embed_key_described": "e8f9894cf82820871a34cecd1e97f575d114430478ff8985202246cf4dc35f90",
+    "content_hash": "50bbc0ffeb888dce",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Nivel\nsymbol: Tipos.Nivel.Nivel\nlines: 24-26\n\n        Nivel(int valor) {\n            this.valor = valor;\n        }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Nivel\nsymbol: Tipos.Nivel.Nivel\nlines: 24-26\nsummary: Does a thing.\n\n        Nivel(int valor) {\n            this.valor = valor;\n        }",
+    "chunk_id": "94639964-0842-5ed9-adcd-925ad30fcc3b"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Nivel.peso",
+    "parent_symbol": "Tipos.Nivel",
+    "class_name": "Nivel",
+    "start_line": 28,
+    "end_line": 30,
+    "text": "        public int peso() {\n            return valor * 10;\n        }",
+    "embed_key": "5606d5cc894689c902acdb6bb847c0a3ef40c110559696af1c37e6dfe3fd7655",
+    "embed_key_described": "1438be8b8526ca78bf30c2994517270ec5c3ea2dfa71cf67bde255e3bbe584cf",
+    "content_hash": "49c04ab14bd0c423",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Nivel\nsymbol: Tipos.Nivel.peso\nlines: 28-30\n\n        public int peso() {\n            return valor * 10;\n        }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Nivel\nsymbol: Tipos.Nivel.peso\nlines: 28-30\nsummary: Does a thing.\n\n        public int peso() {\n            return valor * 10;\n        }",
+    "chunk_id": "00170d60-2f2e-5a3a-bff2-6ff8f93e91e2"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Nivel",
+    "parent_symbol": "",
+    "class_name": "Nivel",
+    "start_line": 31,
+    "end_line": 33,
+    "text": "    }\n\n    record Ponto(int x, int y) {",
+    "embed_key": "861cf53d06abcc77f4bcd66e168cbbea446370f76299a8c3909882d07ee8672c",
+    "embed_key_described": "f656bcf0a28dd31719e52dd80359ebd1a5bd6f7286d4bfe1c8c27a01f764c182",
+    "content_hash": "020f83d289761eb9",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Nivel\nsymbol: Tipos.Nivel\nlines: 31-33\n\n    }\n\n    record Ponto(int x, int y) {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Nivel\nsymbol: Tipos.Nivel\nlines: 31-33\nsummary: Does a thing.\n\n    }\n\n    record Ponto(int x, int y) {",
+    "chunk_id": "7e6a8a53-1016-5c73-9a5c-a7710077d73b"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Ponto.Ponto",
+    "parent_symbol": "Tipos.Ponto",
+    "class_name": "Ponto",
+    "start_line": 34,
+    "end_line": 38,
+    "text": "        public Ponto {\n            if (x < 0) {\n                throw new IllegalArgumentException(\"x\");\n            }\n        }",
+    "embed_key": "fa6670ed612e0cac891e59667d9b53bb958e0da9ebe7d34a2f11a1344722414b",
+    "embed_key_described": "0205708661bc51aa1da79b3ddd800b10c2b4100d485211966350818817ff08cb",
+    "content_hash": "3f13cbb35504bb31",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Ponto\nsymbol: Tipos.Ponto.Ponto\nlines: 34-38\n\n        public Ponto {\n            if (x < 0) {\n                throw new IllegalArgumentException(\"x\");\n            }\n        }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Ponto\nsymbol: Tipos.Ponto.Ponto\nlines: 34-38\nsummary: Does a thing.\n\n        public Ponto {\n            if (x < 0) {\n                throw new IllegalArgumentException(\"x\");\n            }\n        }",
+    "chunk_id": "0dd79fb3-e26c-50f1-b6d3-ab40b0ef91c7"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Ponto.distancia",
+    "parent_symbol": "Tipos.Ponto",
+    "class_name": "Ponto",
+    "start_line": 40,
+    "end_line": 42,
+    "text": "        public double distancia() {\n            return Math.sqrt(x * x + y * y);\n        }",
+    "embed_key": "ed824c5671bd5760aa92f34ecdabbbbdbc92b7b987b4ca8f2543198292218fbf",
+    "embed_key_described": "039a861858e94ae61a29c3ad8bd9a76a2a5e8b433cde30b1e3b6ce6691ba66a5",
+    "content_hash": "53756e47785c5853",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Ponto\nsymbol: Tipos.Ponto.distancia\nlines: 40-42\n\n        public double distancia() {\n            return Math.sqrt(x * x + y * y);\n        }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Ponto\nsymbol: Tipos.Ponto.distancia\nlines: 40-42\nsummary: Does a thing.\n\n        public double distancia() {\n            return Math.sqrt(x * x + y * y);\n        }",
+    "chunk_id": "ebf06507-3c5f-5e12-9628-92f1a6664686"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Marca.valor",
+    "parent_symbol": "Tipos.Marca",
+    "class_name": "Marca",
+    "start_line": 45,
+    "end_line": 46,
+    "text": "    @interface Marca {\n        String valor() default \"x\";",
+    "embed_key": "77826826424da91c7b93c58c159c9d351c16ac2103922f6ba7c052efb888b3a3",
+    "embed_key_described": "2479a9755b48f0b948da95b0d0f3c7f3cea7b88fe1ddda557451d66bbb5b0841",
+    "content_hash": "39b39b877be1bdef",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Marca\nsymbol: Tipos.Marca.valor\nlines: 45-46\n\n    @interface Marca {\n        String valor() default \"x\";",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Marca\nsymbol: Tipos.Marca.valor\nlines: 45-46\nsummary: Does a thing.\n\n    @interface Marca {\n        String valor() default \"x\";",
+    "chunk_id": "dcab50d3-16de-50a3-a268-c199f6b84f84"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Marca",
+    "parent_symbol": "",
+    "class_name": "Marca",
+    "start_line": 47,
+    "end_line": 49,
+    "text": "    }\n\n    class Utilitario {",
+    "embed_key": "9c2b18447a775d570f377d44f4a9375f448e737f03474b3cf610833b4ac46b33",
+    "embed_key_described": "4a2ef1b8f37da68e3ccbc513cfa8ad6083c72ec774f0040b79c9889d373b4840",
+    "content_hash": "f2d4f7457b96597a",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Marca\nsymbol: Tipos.Marca\nlines: 47-49\n\n    }\n\n    class Utilitario {",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Marca\nsymbol: Tipos.Marca\nlines: 47-49\nsummary: Does a thing.\n\n    }\n\n    class Utilitario {",
+    "chunk_id": "b86bec6b-32e3-56cb-8e5f-15e5b0c55291"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Utilitario.maior",
+    "parent_symbol": "Tipos.Utilitario",
+    "class_name": "Utilitario",
+    "start_line": 50,
+    "end_line": 60,
+    "text": "        @Marca(\"a{b}\")\n        public <T extends Comparable<T>> T maior(T a, T b) {\n            Function<T, Integer> f = v -> v.hashCode();\n            Runnable r = new Runnable() {\n                @Override\n                public void run() {\n                    System.out.println(\"run\");\n                }\n            };\n            return f.apply(a) >= f.apply(b) ? a : b;\n        }",
+    "embed_key": "382aea72d8a0d48e0e4c839415f3a248fab5a79c51f7c87616650b4468d7923c",
+    "embed_key_described": "fe32e509d6d078f41d29e42f426e0df1925a9cfbd11d1bdf517742b736eafeac",
+    "content_hash": "e2570ba6fae35c43",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Utilitario\nsymbol: Tipos.Utilitario.maior\nlines: 50-60\n\n        @Marca(\"a{b}\")\n        public <T extends Comparable<T>> T maior(T a, T b) {\n            Function<T, Integer> f = v -> v.hashCode();\n            Runnable r = new Runnable() {\n                @Override\n                public void run() {\n                    System.out.println(\"run\");\n                }\n            };\n            return f.apply(a) >= f.apply(b) ? a : b;\n        }",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Utilitario\nsymbol: Tipos.Utilitario.maior\nlines: 50-60\nsummary: Does a thing.\n\n        @Marca(\"a{b}\")\n        public <T extends Comparable<T>> T maior(T a, T b) {\n            Function<T, Integer> f = v -> v.hashCode();\n            Runnable r = new Runnable() {\n                @Override\n                public void run() {\n                    System.out.println(\"run\");\n                }\n            };\n            return f.apply(a) >= f.apply(b) ? a : b;\n        }",
+    "chunk_id": "86c1de78-13f8-56c9-a950-5342ec4bb88f"
+   },
+   {
+    "source": "src/main/java/br/Tipos.java",
+    "symbol": "Tipos.Utilitario",
+    "parent_symbol": "",
+    "class_name": "Utilitario",
+    "start_line": 62,
+    "end_line": 64,
+    "text": "        int[] tabela = {1, 2, 3};\n    }\n}",
+    "embed_key": "978cedff41ff734bfdcb3b6849773445bd6ba74f58a4fa0cb381eaadef807803",
+    "embed_key_described": "d0c416910c9fef53099053367de92b5b60d3323ccd3a9b2ffc3b7d382fd4d344",
+    "content_hash": "dc079248df87fff4",
+    "embed_text": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Utilitario\nsymbol: Tipos.Utilitario\nlines: 62-64\n\n        int[] tabela = {1, 2, 3};\n    }\n}",
+    "embed_text_described": "repo: svc\npath: src/main/java/br/Tipos.java\nclass: Utilitario\nsymbol: Tipos.Utilitario\nlines: 62-64\nsummary: Does a thing.\n\n        int[] tabela = {1, 2, 3};\n    }\n}",
+    "chunk_id": "d7b6b4c6-1f49-567e-9a2c-cf88f009489b"
+   }
+  ],
+  "Vazio.java": []
+ },
+ "sparse": [
+  {
+   "text": "calcularJuros",
+   "terms": [
+    "calcularjuros",
+    "calcular",
+    "juros"
+   ],
+   "doc": {
+    "calcularjuros": 1,
+    "calcular": 1,
+    "juros": 1
+   },
+   "query": {
+    "calcularjuros": 1.0,
+    "calcular": 1.0,
+    "juros": 1.0
+   }
+  },
+  {
+   "text": "HTTPServer parse_xml_2Json",
+   "terms": [
+    "httpserver",
+    "http",
+    "server",
+    "parsexml2json",
+    "parse",
+    "xml",
+    "2",
+    "json"
+   ],
+   "doc": {
+    "httpserver": 1,
+    "http": 1,
+    "server": 1,
+    "parsexml2json": 1,
+    "parse": 1,
+    "xml": 1,
+    "2": 1,
+    "json": 1
+   },
+   "query": {
+    "httpserver": 1.0,
+    "http": 1.0,
+    "server": 1.0,
+    "parsexml2json": 1.0,
+    "parse": 1.0,
+    "xml": 1.0,
+    "2": 1.0,
+    "json": 1.0
+   }
+  },
+  {
+   "text": "__init__ $cache",
+   "terms": [
+    "init",
+    "cache"
+   ],
+   "doc": {
+    "init": 1,
+    "cache": 1
+   },
+   "query": {
+    "init": 1.0,
+    "cache": 1.0
+   }
+  },
+  {
+   "text": "getURLFromHTTPSConnection",
+   "terms": [
+    "geturlfromhttpsconnection",
+    "get",
+    "url",
+    "from",
+    "https",
+    "connection"
+   ],
+   "doc": {
+    "geturlfromhttpsconnection": 1,
+    "get": 1,
+    "url": 1,
+    "from": 1,
+    "https": 1,
+    "connection": 1
+   },
+   "query": {
+    "geturlfromhttpsconnection": 1.0,
+    "get": 1.0,
+    "url": 1.0,
+    "from": 1.0,
+    "https": 1.0,
+    "connection": 1.0
+   }
+  },
+  {
+   "text": "a b c1 d22",
+   "terms": [
+    "c1",
+    "1",
+    "d22",
+    "22"
+   ],
+   "doc": {
+    "c1": 1,
+    "1": 1,
+    "d22": 1,
+    "22": 1
+   },
+   "query": {
+    "c1": 1.0,
+    "1": 1.0,
+    "d22": 1.0,
+    "22": 1.0
+   }
+  },
+  {
+   "text": "ABC",
+   "terms": [
+    "abc"
+   ],
+   "doc": {
+    "abc": 1
+   },
+   "query": {
+    "abc": 1.0
+   }
+  },
+  {
+   "text": "iPhone14Pro",
+   "terms": [
+    "iphone14pro",
+    "phone",
+    "14",
+    "pro"
+   ],
+   "doc": {
+    "iphone14pro": 1,
+    "phone": 1,
+    "14": 1,
+    "pro": 1
+   },
+   "query": {
+    "iphone14pro": 1.0,
+    "phone": 1.0,
+    "14": 1.0,
+    "pro": 1.0
+   }
+  },
+  {
+   "text": "x = foo.bar(baz);  // coment",
+   "terms": [
+    "foo",
+    "bar",
+    "baz",
+    "coment"
+   ],
+   "doc": {
+    "foo": 1,
+    "bar": 1,
+    "baz": 1,
+    "coment": 1
+   },
+   "query": {
+    "foo": 1.0,
+    "bar": 1.0,
+    "baz": 1.0,
+    "coment": 1.0
+   }
+  },
+  {
+   "text": "",
+   "terms": [],
+   "doc": {},
+   "query": {}
+  },
+  {
+   "text": "123 456",
+   "terms": [],
+   "doc": {},
+   "query": {}
+  },
+  {
+   "text": "ação descrição",
+   "terms": [
+    "descri"
+   ],
+   "doc": {
+    "descri": 1
+   },
+   "query": {
+    "descri": 1.0
+   }
+  },
+  {
+   "text": "CONSTANTE_MAXIMA_100",
+   "terms": [
+    "constantemaxima100",
+    "constante",
+    "maxima",
+    "100"
+   ],
+   "doc": {
+    "constantemaxima100": 1,
+    "constante": 1,
+    "maxima": 1,
+    "100": 1
+   },
+   "query": {
+    "constantemaxima100": 1.0,
+    "constante": 1.0,
+    "maxima": 1.0,
+    "100": 1.0
+   }
+  }
+ ],
+ "fusion": {
+  "rrf": [
+   {
+    "k": 60,
+    "rankings": [
+     [
+      [
+       "a",
+       1
+      ],
+      [
+       "a",
+       2
+      ],
+      [
+       "b",
+       1
+      ]
+     ],
+     [
+      [
+       "a",
+       2
+      ],
+      [
+       "b",
+       1
+      ],
+      [
+       "c",
+       9
+      ]
+     ]
+    ],
+    "fused": [
+     [
+      "a",
+      2,
+      0.03252247488101534
+     ],
+     [
+      "b",
+      1,
+      0.03200204813108039
+     ],
+     [
+      "a",
+      1,
+      0.01639344262295082
+     ],
+     [
+      "c",
+      9,
+      0.015873015873015872
+     ]
+    ]
+   },
+   {
+    "k": 60,
+    "rankings": [
+     [
+      [
+       "a",
+       1
+      ],
+      [
+       "a",
+       2
+      ]
+     ],
+     [
+      [
+       "a",
+       2
+      ],
+      [
+       "a",
+       1
+      ]
+     ]
+    ],
+    "fused": [
+     [
+      "a",
+      1,
+      0.03252247488101534
+     ],
+     [
+      "a",
+      2,
+      0.03252247488101534
+     ]
+    ]
+   },
+   {
+    "k": 10,
+    "rankings": [
+     [
+      [
+       "x",
+       5
+      ]
+     ],
+     []
+    ],
+    "fused": [
+     [
+      "x",
+      5,
+      0.09090909090909091
+     ]
+    ]
+   },
+   {
+    "k": 60,
+    "rankings": [
+     [],
+     []
+    ],
+    "fused": []
+   }
+  ],
+  "locations": [
+   [
+    "a",
+    1,
+    "F.java",
+    1,
+    10
+   ],
+   [
+    "a",
+    2,
+    "F.java",
+    5,
+    20
+   ],
+   [
+    "a",
+    3,
+    "F.java",
+    21,
+    30
+   ],
+   [
+    "b",
+    1,
+    "F.java",
+    1,
+    10
+   ],
+   [
+    "b",
+    2,
+    "G.java",
+    1,
+    3
+   ]
+  ],
+  "collapse": [
+   {
+    "limit": 2,
+    "kept": [
+     [
+      "a",
+      1
+     ],
+     [
+      "b",
+      1
+     ]
+    ]
+   },
+   {
+    "limit": 3,
+    "kept": [
+     [
+      "a",
+      1
+     ],
+     [
+      "b",
+      1
+     ],
+     [
+      "a",
+      3
+     ]
+    ]
+   },
+   {
+    "limit": 10,
+    "kept": [
+     [
+      "a",
+      1
+     ],
+     [
+      "b",
+      1
+     ],
+     [
+      "a",
+      3
+     ],
+     [
+      "b",
+      2
+     ]
+    ]
+   }
+  ]
+ },
+ "policy": {
+  "default_version_id": "1-16b08849",
+  "paths": [
+   [
+    "src/main/java/br/A.java",
+    true
+   ],
+   [
+    "src/main/java/br/A.JAVA",
+    true
+   ],
+   [
+    "src/main/java/br/A.kt",
+    false
+   ],
+   [
+    "target/classes/A.java",
+    false
+   ],
+   [
+    "src/build/X.java",
+    false
+   ],
+   [
+    "src/main/java/.env.java",
+    false
+   ],
+   [
+    "src/main/java/secret.key",
+    false
+   ],
+   [
+    "../x/A.java",
+    false
+   ],
+   [
+    "/abs/A.java",
+    false
+   ],
+   [
+    "a//b/./C.java",
+    true
+   ],
+   [
+    "",
+    false
+   ],
+   [
+    ".",
+    false
+   ],
+   [
+    "Dir\\Sub\\C.java",
+    true
+   ],
+   [
+    "src/main/java/br/id_rsa.java",
+    false
+   ],
+   [
+    "src/main/java/.java",
+    false
+   ],
+   [
+    "src/main/java/A.",
+    false
+   ],
+   [
+    "src/node_modules/a/B.java",
+    false
+   ],
+   [
+    "C:/x/A.java",
+    true
+   ],
+   [
+    "src/main/java/br/X.java.bak",
+    false
+   ]
+  ],
+  "secrets": [
+   [
+    "-----BEGIN RSA PRIVATE KEY-----",
+    true
+   ],
+   [
+    "AKIAABCDEFGHIJKLMNOP",
+    true
+   ],
+   [
+    "ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    true
+   ],
+   [
+    "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkw.abc",
+    true
+   ],
+   [
+    "String password = \"abc12345\";",
+    true
+   ],
+   [
+    "String apiKey = 'abcdef12';",
+    true
+   ],
+   [
+    "senha = \"x\"",
+    false
+   ],
+   [
+    "int x = 1;",
+    false
+   ],
+   [
+    "PASSWORD: \"short\"",
+    false
+   ],
+   [
+    "String API_KEY = \"123456\";",
+    true
+   ]
+  ],
+  "invalid_empty_ext": false,
+  "invalid_missing_key": false,
+  "canonical": [
+   "{\"exclude_dirs\":[\".git\",\".svn\",\".hg\",\".idea\",\".settings\",\".gradle\",\".mvn\",\"node_modules\",\"build\",\"target\",\"out\",\"bin\",\"dist\",\"generated-sources\"],\"exclude_file_globs\":[\".env*\",\"*.pem\",\"*.key\",\"*.p12\",\"*.pfx\",\"*.jks\",\"*.keystore\",\"*.crt\",\"*.cer\",\"*.der\",\"id_rsa*\",\"id_ed25519*\",\"*.secret\"],\"include_extensions\":[\".java\"],\"max_file_bytes\":1000000,\"secret_patterns\":[\"-----BEGIN [A-Z ]*PRIVATE KEY-----\",\"\\\\bAKIA[0-9A-Z]{16}\\\\b\",\"\\\\bgh[pousr]_[A-Za-z0-9]{30,}\\\\b\",\"\\\\beyJ[A-Za-z0-9_-]{10,}\\\\.[A-Za-z0-9_-]{10,}\\\\.\",\"(?i)\\\\b(password|passwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\\\\b\\\\s*[:=]\\\\s*[\\\\\\\"'][^\\\\\\\"'\\\\s]{6,}[\\\\\\\"']\"],\"version\":\"1\"}",
+   "{\"a\":[\"x\",\"ç\\n\\\"\\\\\"],\"b\":1}"
+  ],
+  "short_digest": "24ec345015abd292"
+ }
+}
