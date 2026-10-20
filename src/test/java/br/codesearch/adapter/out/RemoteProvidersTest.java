@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import br.codesearch.adapter.out.describer.DescriberPrompt;
+import br.codesearch.adapter.out.remote.GeminiEmbedder;
 import br.codesearch.adapter.out.remote.OpenAiEmbedder;
 import br.codesearch.adapter.out.remote.RemoteDescribers;
 import br.codesearch.domain.CodeSearchException;
@@ -161,6 +162,66 @@ class RemoteProvidersTest {
         assertThat(claude.describerId()).isNotEqualTo(openAi.describerId()).hasSize(16);
         assertThat(new RemoteDescribers.OpenAi(base, KEY, "gpt-y").describerId()).isNotEqualTo(openAi.describerId());
         assertThat(new RemoteDescribers.OpenAi(base, KEY, "gpt-x").describerId()).isEqualTo(openAi.describerId());
+    }
+
+    @Test
+    void geminiEmbedderUsesTaskTypesAndSendsTheKeyOnlyInTheHeader() throws Exception {
+        String base = start() + "/v1beta";
+        response = "{\"embeddings\":[{\"values\":[3,4,0]}]}";
+        GeminiEmbedder embedder = new GeminiEmbedder(base, KEY, "gemini-embedding-001", 3);
+        assertThat(embedder.profile().dim()).isEqualTo(3);
+        assertThat(embedder.profile().digest()).isEqualTo("remote:gemini:3");
+        assertThat(embedder.local()).isFalse();
+
+        assertThat(embedder.embedQuery("juros")).containsExactly(0.6f, 0.8f, 0.0f);
+        Seen q = seen.get(seen.size() - 1);
+        assertThat(q.path()).isEqualTo("/v1beta/models/gemini-embedding-001:batchEmbedContents");
+        assertThat(q.headers().get("x-goog-api-key")).isEqualTo(KEY);
+        JsonNode req = q.body().get("requests").get(0);
+        assertThat(req.get("taskType").asString()).isEqualTo("CODE_RETRIEVAL_QUERY");
+        assertThat(req.get("model").asString()).isEqualTo("models/gemini-embedding-001");
+        assertThat(req.get("outputDimensionality").asInt()).isEqualTo(3);
+        assertThat(req.get("content").get("parts").get(0).get("text").asString()).isEqualTo("juros");
+        assertThat(q.body().toString()).doesNotContain(KEY);
+
+        embedder.embedDocuments(List.of("a"));
+        assertThat(seen.get(seen.size() - 1).body().get("requests").get(0).get("taskType").asString()).isEqualTo("RETRIEVAL_DOCUMENT");
+    }
+
+    @Test
+    void geminiEmbedderMapsFailuresWithoutLeakingTheKeyOrTheBody() throws Exception {
+        String base = start();
+        response = "{\"embeddings\":[{\"values\":[1,0]}]}";
+        GeminiEmbedder embedder = new GeminiEmbedder(base, KEY, "m", 0);
+        status = 403;
+        response = "{\"error\":{\"message\":\"API key " + KEY + " class Segredo\"}}";
+        assertThatThrownBy(() -> embedder.embedQuery("x")).hasMessageContaining("authentication failed")
+                .satisfies(e -> assertThat(e.getMessage()).doesNotContain(KEY).doesNotContain("Segredo"));
+        status = 200;
+        response = "{\"embeddings\":[{\"values\":[0,0]}]}";
+        assertThatThrownBy(() -> embedder.embedQuery("x")).hasMessageContaining("zero norm");
+        assertThatThrownBy(() -> new GeminiEmbedder("https://generativelanguage.googleapis.com/v1beta", "", "m", 0))
+                .hasMessageContaining("GEMINI_API_KEY");
+        assertThatThrownBy(() -> new GeminiEmbedder("http://example.com", KEY, "m", 0)).hasMessageContaining("must be https");
+    }
+
+    @Test
+    void geminiDescriberUsesGenerateContentAndSkipsThoughtParts() throws Exception {
+        String base = start();
+        response = "{\"candidates\":[{\"content\":{\"parts\":[{\"thought\":true,\"text\":\"hmm\"},{\"text\":\" Cancels  a payment. \"}]}}]}";
+        RemoteDescribers.Gemini gemini = new RemoteDescribers.Gemini(base, KEY, "gemini-2.5-flash");
+        assertThat(gemini.local()).isFalse();
+        assertThat(gemini.describe("A.b", "void b() {}")).isEqualTo("Cancels a payment.");
+        Seen s = seen.get(0);
+        assertThat(s.path()).isEqualTo("/models/gemini-2.5-flash:generateContent");
+        assertThat(s.headers().get("x-goog-api-key")).isEqualTo(KEY);
+        assertThat(s.body().get("generationConfig").get("maxOutputTokens").asInt()).isEqualTo(DescriberPrompt.MAX_OUTPUT_TOKENS);
+        assertThat(s.body().get("contents").get(0).get("parts").get(0).get("text").asString()).contains("<code>");
+        assertThat(gemini.describerId()).isNotEqualTo(new RemoteDescribers.Claude(base, KEY, "gemini-2.5-flash").describerId());
+
+        response = "{\"candidates\":[]}";
+        assertThatThrownBy(() -> gemini.describe("A", "x")).isInstanceOfSatisfying(CodeSearchException.class,
+                e -> assertThat(e.code()).isEqualTo("describer_unavailable"));
     }
 
     @Test

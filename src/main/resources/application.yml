@@ -20,9 +20,12 @@ code-search:
   timeout-seconds: 30
   # Provedores EXTERNOS (o texto sai da máquina): só com allow-remote, ou --allow-remote no comando.
   allow-remote: ${CODE_SEARCH_ALLOW_REMOTE:false}
-  describer: ${CODE_SEARCH_DESCRIBER:}                 # vazio, ollama, openai ou claude
+  describer: ${CODE_SEARCH_DESCRIBER:}                 # vazio, ollama, openai, claude ou gemini
   describer-model: ${CODE_SEARCH_DESCRIBER_MODEL:}
   openai-base-url: ${CODE_SEARCH_OPENAI_BASE_URL:https://api.openai.com/v1}
   openai-model: ${CODE_SEARCH_OPENAI_MODEL:text-embedding-3-small}
   openai-dimensions: ${CODE_SEARCH_OPENAI_DIMENSIONS:0}
   anthropic-base-url: ${CODE_SEARCH_ANTHROPIC_BASE_URL:https://api.anthropic.com}
+  gemini-base-url: ${CODE_SEARCH_GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
+  gemini-model: ${CODE_SEARCH_GEMINI_MODEL:gemini-embedding-001}
+  gemini-dimensions: ${CODE_SEARCH_GEMINI_DIMENSIONS:0}
