@@ -8,6 +8,7 @@ import br.codesearch.adapter.out.git.GitSource;
 import br.codesearch.adapter.out.describer.OllamaDescriber;
 import br.codesearch.adapter.out.ollama.OllamaClient;
 import br.codesearch.adapter.out.ollama.OllamaEmbedder;
+import br.codesearch.adapter.out.remote.GeminiEmbedder;
 import br.codesearch.adapter.out.remote.OpenAiEmbedder;
 import br.codesearch.adapter.out.remote.RemoteDescribers;
 import br.codesearch.adapter.out.sparse.JavaSparseEncoder;
@@ -73,7 +74,8 @@ class CodeSearchConfig {
 
     @Bean
     @Lazy
-    Embedder embedder(CodeSearchProperties props, @Value("${OPENAI_API_KEY:}") String openaiKey) {
+    Embedder embedder(CodeSearchProperties props, @Value("${OPENAI_API_KEY:}") String openaiKey,
+            @Value("${GEMINI_API_KEY:}") String geminiKey) {
         switch (props.embedder()) {
             case "ollama" -> {
                 return new OllamaEmbedder(props.ollamaModel(), new OllamaClient(props.ollamaUrl(), Duration.ofSeconds(60)),
@@ -86,8 +88,15 @@ class CodeSearchConfig {
                 RemoteGate.announce(System.err, "embedder", "openai", embedder.host(), "trechos de código e consultas");
                 return embedder;
             }
+            case "gemini" -> {
+                RemoteGate.require(props.allowRemote(), "embedder", "gemini", "embedder_unavailable");
+                GeminiEmbedder embedder = new GeminiEmbedder(props.geminiBaseUrl(), geminiKey, props.geminiModel(),
+                        props.geminiDimensions());
+                RemoteGate.announce(System.err, "embedder", "gemini", embedder.host(), "trechos de código e consultas");
+                return embedder;
+            }
             default -> throw new CodeSearchException("embedder_unavailable",
-                    "unknown embedder '" + props.embedder() + "'; available: ollama, openai");
+                    "unknown embedder '" + props.embedder() + "'; available: ollama, openai, gemini");
         }
     }
 
@@ -95,7 +104,7 @@ class CodeSearchConfig {
     @Lazy
     ChunkDescriber chunkDescriber(
             CodeSearchProperties props, @Value("${OPENAI_API_KEY:}") String openaiKey,
-            @Value("${ANTHROPIC_API_KEY:}") String anthropicKey) {
+            @Value("${ANTHROPIC_API_KEY:}") String anthropicKey, @Value("${GEMINI_API_KEY:}") String geminiKey) {
         return new LazyDescriber(() -> switch (props.describer()) {
             case "" -> null;
             case "ollama" -> new OllamaDescriber(props.describerModel(), new OllamaClient(props.ollamaUrl(), Duration.ofSeconds(120)));
@@ -112,8 +121,15 @@ class CodeSearchConfig {
                 RemoteGate.announce(System.err, "describer", "claude", d.host(), "o código dos métodos");
                 yield d;
             }
+            case "gemini" -> {
+                RemoteGate.require(props.allowRemote(), "describer", "gemini", "describer_unavailable");
+                String model = props.describerModel().isBlank() ? "gemini-2.5-flash" : props.describerModel();
+                var d = new RemoteDescribers.Gemini(props.geminiBaseUrl(), geminiKey, model);
+                RemoteGate.announce(System.err, "describer", "gemini", d.host(), "o código dos métodos");
+                yield d;
+            }
             default -> throw new CodeSearchException("describer_unavailable",
-                    "unknown describer '" + props.describer() + "'; available: ollama, openai, claude");
+                    "unknown describer '" + props.describer() + "'; available: ollama, openai, claude, gemini");
         });
     }
 
