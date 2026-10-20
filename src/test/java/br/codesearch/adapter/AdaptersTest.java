@@ -28,7 +28,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class AdaptersTest {
+public class AdaptersTest {
 
     @TempDir
     Path tmp;
@@ -200,7 +200,7 @@ class AdaptersTest {
                 .isInstanceOfSatisfying(CodeSearchException.class, e -> assertThat(e.code()).isEqualTo("repo_unavailable"));
     }
 
-    static void git(Path dir, String... args) throws Exception {
+    public static void git(Path dir, String... args) throws Exception {
         List<String> cmd = new ArrayList<>(List.of("git", "-C", dir.toString()));
         cmd.addAll(List.of(args));
         Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
