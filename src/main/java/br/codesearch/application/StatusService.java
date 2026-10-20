@@ -54,6 +54,7 @@ public final class StatusService {
             m.put("model", e.profile().model());
             m.put("dim", e.profile().dim());
             m.put("profile_id", e.profile().profileId());
+            m.put("local", e.local());
             out.put("embedder", m);
         } else {
             out.put("embedder", null);

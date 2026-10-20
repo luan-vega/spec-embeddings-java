@@ -7,4 +7,9 @@ public interface ChunkDescriber {
 
     /** Uma linha de texto. Falha com describer_unavailable; nunca devolve texto vazio. */
     String describe(String symbol, String code);
+
+    /** Falso quando o código enviado sai da máquina (provedor externo). */
+    default boolean local() {
+        return true;
+    }
 }

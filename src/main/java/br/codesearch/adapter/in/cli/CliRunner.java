@@ -36,7 +36,9 @@ public class CliRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        List<String> argv = List.of(args.getSourceArgs());
+        // propriedades de configuração (--code-search.*, --server.*) não são argumentos do comando
+        List<String> argv = java.util.Arrays.stream(args.getSourceArgs())
+                .filter(a -> !a.startsWith("--code-search.") && !a.startsWith("--server.")).toList();
         if (argv.isEmpty() || argv.get(0).startsWith("--")) {
             return; // sem comando (ex.: apenas --server.port), o servidor web cuida do resto
         }

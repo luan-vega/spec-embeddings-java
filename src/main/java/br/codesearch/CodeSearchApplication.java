@@ -21,9 +21,45 @@ public class CodeSearchApplication {
         System.exit(start(args));
     }
 
-    static int start(String[] args) {
+    /** Argumentos do comando (sem as opções de provedor) e as propriedades Spring equivalentes. */
+    record Split(List<String> command, List<String> properties) {}
+
+    /**
+     * Escolha de provedor por comando: {@code --embedder X}, {@code --describer X} e {@code --allow-remote} valem para qualquer
+     * comando e viram {@code code-search.*}, que têm precedência sobre as variáveis de ambiente.
+     */
+    static Split splitProviderOptions(String[] args) {
+        List<String> command = new ArrayList<>();
+        List<String> properties = new ArrayList<>();
+        for (int i = 0; i < args.length; i++) {
+            switch (args[i]) {
+                case "--embedder" -> properties.add("--code-search.embedder=" + valueAfter(args, i++));
+                case "--describer" -> properties.add("--code-search.describer=" + valueAfter(args, i++));
+                case "--allow-remote" -> properties.add("--code-search.allow-remote=true");
+                default -> command.add(args[i]);
+            }
+        }
+        return new Split(command, properties);
+    }
+
+    private static String valueAfter(String[] args, int i) {
+        if (i + 1 >= args.length) {
+            throw new IllegalArgumentException("missing value for " + args[i]);
+        }
+        return args[i + 1];
+    }
+
+    static int start(String[] rawArgs) {
+        Split split;
+        try {
+            split = splitProviderOptions(rawArgs);
+        } catch (IllegalArgumentException e) {
+            System.err.println("erro [invalid_request]: " + e.getMessage());
+            return 1;
+        }
+        String[] args = split.command().toArray(String[]::new);
         SpringApplication app = new SpringApplication(CodeSearchApplication.class);
-        List<String> passed = new ArrayList<>(List.of(args));
+        List<String> passed;
         if (args.length > 0 && args[0].equals("serve")) {
             String host = "127.0.0.1";
             String port = "8765";
@@ -41,7 +77,8 @@ public class CodeSearchApplication {
                 System.err.println("erro [invalid_request]: the server only listens on loopback");
                 return 1;
             }
-            passed = List.of("--server.address=" + host, "--server.port=" + port);
+            passed = new ArrayList<>(List.of("--server.address=" + host, "--server.port=" + port));
+            passed.addAll(split.properties());
             ConfigurableApplicationContext ctx = app.run(passed.toArray(String[]::new));
             return waitForShutdown(ctx);
         }
@@ -52,7 +89,9 @@ public class CodeSearchApplication {
         app.setWebApplicationType(WebApplicationType.NONE);
         app.setLogStartupInfo(false);
         System.setProperty("logging.level.root", "OFF");
-        try (ConfigurableApplicationContext ctx = app.run(args)) {
+        passed = new ArrayList<>(split.command());
+        passed.addAll(split.properties());
+        try (ConfigurableApplicationContext ctx = app.run(passed.toArray(String[]::new))) {
             return ctx.getBean(CliRunner.class).exitCode();
         } catch (RuntimeException e) {
             System.err.println("erro [startup_failed]: the application could not start");

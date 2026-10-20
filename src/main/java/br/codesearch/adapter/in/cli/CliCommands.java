@@ -48,6 +48,11 @@ public final class CliCommands {
               prune [--tmp-max-age SEGUNDOS]          apaga gerações e segmentos sem referência
               serve [--host H] [--port N]             HTTP local em 127.0.0.1
               mcp                                     servidor MCP por stdio (somente leitura)
+
+            provedor, em qualquer comando (padrão: local, pelo ambiente):
+              --embedder ollama|openai                openai é EXTERNO: trechos e consultas saem da máquina
+              --describer ollama|openai|claude        descreve métodos em inglês antes de indexar; openai e claude são EXTERNOS
+              --allow-remote                          autoriza provedor externo só neste comando
             """;
 
     private static final JsonMapper JSON = JsonMapper.builder().build();
