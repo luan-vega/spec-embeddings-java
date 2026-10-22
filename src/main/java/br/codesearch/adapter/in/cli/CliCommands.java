@@ -10,7 +10,9 @@ import br.codesearch.application.SearchResponse;
 import br.codesearch.application.SearchService;
 import br.codesearch.application.StatusService;
 import br.codesearch.application.port.Embedder;
+import br.codesearch.application.ProviderInfo;
 import br.codesearch.application.port.PolicyStore;
+import br.codesearch.application.port.ProviderCatalog;
 import br.codesearch.application.port.RepoCatalog;
 import br.codesearch.application.port.VectorStore;
 import br.codesearch.domain.CodeSearchException;
@@ -42,6 +44,7 @@ public final class CliCommands {
               repo add <id> <caminho> [--root R]...   registra um repositório Git
               repo list | repo remove <id>
               policy init [--force]                   grava a política de exclusão padrão
+              providers [--json]                      provedores de IA (local e externos) e o que falta em cada um
               ollama-probe                            mostra modelo, digest, dimensão e profile_id
               index [--repo ID]... [--force]          reindexa os repositórios habilitados
               search <consulta> [--mode hybrid|semantic|lexical] [--repo ID]... [--language L]...
@@ -62,7 +65,8 @@ public final class CliCommands {
 
     private static final JsonMapper JSON = JsonMapper.builder().build();
     private static final Map<String, Set<String>> FLAGS = Map.of(
-            "policy", Set.of("--force"), "index", Set.of("--force"), "search", Set.of("--json"), "status", Set.of("--json"));
+            "policy", Set.of("--force"), "index", Set.of("--force"), "search", Set.of("--json"), "status", Set.of("--json"),
+            "providers", Set.of("--json"));
     private static final Map<String, Set<String>> OPTIONS = Map.of(
             "repo", Set.of("--root"), "index", Set.of("--repo"),
             "search", Set.of("--mode", "--repo", "--language", "--path-prefix", "--top-k"), "prune", Set.of("--tmp-max-age"),
@@ -77,9 +81,19 @@ public final class CliCommands {
     private final Supplier<IndexService> indexer;
     private final Supplier<SearchService> search;
 
+    private final ProviderCatalog providers;
+
     public CliCommands(
             RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
             Supplier<Embedder> embedder, Supplier<IndexService> indexer, Supplier<SearchService> search) {
+        this(registry, policies, store, status, runner, embedder, indexer, search, null);
+    }
+
+    public CliCommands(
+            RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
+            Supplier<Embedder> embedder, Supplier<IndexService> indexer, Supplier<SearchService> search,
+            ProviderCatalog providers) {
+        this.providers = providers;
         this.registry = registry;
         this.policies = policies;
         this.store = store;
@@ -210,6 +224,9 @@ public final class CliCommands {
             case "eval" -> {
                 return eval(p, out);
             }
+            case "providers" -> {
+                return providers(p, out);
+            }
             case "serve" -> throw new CodeSearchException("invalid_request", "serve must be the first argument of the application");
             default -> throw new CodeSearchException("invalid_request", "unknown command");
         }
@@ -262,6 +279,43 @@ public final class CliCommands {
             }
         }
         out.println("geração " + report.generationId() + " ativa");
+        return 0;
+    }
+
+    private int providers(Parsed p, PrintStream out) {
+        expect(p, 0, "no positional arguments");
+        if (providers == null) {
+            throw new CodeSearchException("invalid_request", "provider catalog not available");
+        }
+        List<ProviderInfo> list = providers.providers();
+        boolean allowed = providers.allowRemote();
+        if (p.flags().contains("--json")) {
+            List<Map<String, Object>> rows = new ArrayList<>();
+            for (ProviderInfo i : list) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("role", i.role());
+                m.put("name", i.name());
+                m.put("external", i.external());
+                m.put("selected", i.selected());
+                m.put("ready", i.ready());
+                m.put("model", i.model());
+                m.put("url", i.url());
+                m.put("missing", i.missing());
+                rows.add(m);
+            }
+            Map<String, Object> json = new LinkedHashMap<>();
+            json.put("allow_remote", allowed);
+            json.put("providers", rows);
+            out.println(JSON.writerWithDefaultPrettyPrinter().writeValueAsString(json));
+            return 0;
+        }
+        out.println("externos autorizados: " + (allowed ? "sim" : "não (use --allow-remote ou CODE_SEARCH_ALLOW_REMOTE=1)"));
+        for (ProviderInfo i : list) {
+            String state = i.ready() ? "pronto" : "falta " + String.join(", ", i.missing());
+            out.printf("%-9s %-7s %-7s %s %-28s %s%n", i.role(), i.name(), i.external() ? "EXTERNO" : "local",
+                    i.selected() ? "*" : " ", state, i.model().isBlank() ? "-" : i.model());
+        }
+        out.println("* = em uso. Troque com --embedder/--describer ou CODE_SEARCH_EMBEDDER/CODE_SEARCH_DESCRIBER.");
         return 0;
     }
 

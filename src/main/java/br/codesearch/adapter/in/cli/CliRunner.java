@@ -6,6 +6,7 @@ import br.codesearch.application.SearchService;
 import br.codesearch.application.StatusService;
 import br.codesearch.application.port.Embedder;
 import br.codesearch.application.port.PolicyStore;
+import br.codesearch.application.port.ProviderCatalog;
 import br.codesearch.application.port.RepoCatalog;
 import br.codesearch.application.port.VectorStore;
 import br.codesearch.domain.CodeSearchException;
@@ -29,9 +30,10 @@ public class CliRunner implements ApplicationRunner {
 
     CliRunner(
             RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
-            ObjectProvider<Embedder> embedder, ObjectProvider<IndexService> indexer, ObjectProvider<SearchService> search) {
+            ObjectProvider<Embedder> embedder, ObjectProvider<IndexService> indexer, ObjectProvider<SearchService> search,
+            ProviderCatalog providers) {
         this.commands = new CliCommands(registry, policies, store, status, runner, () -> CodeSearchException.resolve(embedder::getObject), () -> CodeSearchException.resolve(indexer::getObject),
-                () -> CodeSearchException.resolve(search::getObject));
+                () -> CodeSearchException.resolve(search::getObject), providers);
     }
 
     @Override

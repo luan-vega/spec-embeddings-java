@@ -16,6 +16,10 @@ versão Python em `luan-vega/code-search-embeddings`. Mesma arquitetura hexagona
 - Diferença conhecida: ordenação e comprimento seguem pontos de código no `len`, mas a comparação de strings no desempate usa
   unidades UTF-16 (só difere para caracteres fora do plano básico).
 
+- **Funcional de ponta a ponta**: indexação e busca híbrida (BM25 + denso + RRF), armazenamento em arquivo com gerações
+  blue/green, HTTP em loopback, MCP por stdio (somente leitura), CLI e o gate `eval` (mesmo formato e limiares do Python).
+- **Provedores de IA intercambiáveis**: Ollama (local) e OpenAI, Claude e Gemini (externos, só com opt-in). Ver abaixo.
+
 ## Camadas
 
 | Pacote | Papel | Pode depender de |
@@ -33,6 +37,45 @@ As regras estão em `ArchitectureTest`.
 mvn verify          # testes
 mvn spring-boot:run # sobe em 127.0.0.1:8765
 ```
+
+## Provedores de IA
+
+O padrão é 100% local (Ollama, zero egress). Provedores externos são opcionais e escolhidos por comando, sem mexer no código:
+
+| Papel | Opções | Escolha |
+|---|---|---|
+| embedder (consultas e documentos) | `ollama` (local), `openai`, `gemini` | `--embedder X` ou `CODE_SEARCH_EMBEDDER` |
+| describer (frase em inglês por método, na indexação) | `ollama` (local), `openai`, `claude`, `gemini` | `--describer X` ou `CODE_SEARCH_DESCRIBER` |
+
+- **Externo = o texto sai da máquina** (código dos métodos e consultas). Só funciona com `--allow-remote` no comando (ou
+  `CODE_SEARCH_ALLOW_REMOTE=1`), e um aviso em stderr diz para onde os dados vão.
+- **Chaves só por variável de ambiente**: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`. Nunca em arquivo de
+  configuração, log ou mensagem de erro. HTTPS é obrigatório (HTTP só em loopback, para servidores compatíveis locais).
+- A Anthropic não tem API de embeddings: a Claude só descreve. Boa combinação: embedder local + describer externo só na
+  indexação (as consultas não saem da máquina).
+- Trocar de embedder ou de describer muda o perfil do índice: use um `CODE_SEARCH_HOME` separado para cada combinação ou
+  reindexe.
+- Modelos: `CODE_SEARCH_OLLAMA_MODEL`, `CODE_SEARCH_OPENAI_MODEL` (padrão `text-embedding-3-small`),
+  `CODE_SEARCH_GEMINI_MODEL` (padrão `gemini-embedding-001`), `CODE_SEARCH_DESCRIBER_MODEL` (padrão `claude-haiku-5-5` na Claude
+  e `gemini-2.5-flash` no Gemini). Dimensões opcionais: `CODE_SEARCH_OPENAI_DIMENSIONS`, `CODE_SEARCH_GEMINI_DIMENSIONS`.
+  Endereços: `CODE_SEARCH_OPENAI_BASE_URL` (aceita servidores compatíveis com a API da OpenAI),
+  `CODE_SEARCH_GEMINI_BASE_URL`, `CODE_SEARCH_ANTHROPIC_BASE_URL`.
+
+Veja o que está configurado e o que falta em cada provedor (não chama nenhum, não mostra chaves):
+
+```
+code-search providers [--json]
+```
+
+Exemplo, indexando com embedder local e describer Claude:
+
+```
+export ANTHROPIC_API_KEY=...        # no ambiente, nunca no repositório
+code-search index --describer claude --allow-remote
+```
+
+Para acrescentar outro provedor, implemente a porta `Embedder` ou `ChunkDescriber` em `adapter.out`, acrescente um `case`
+em `CodeSearchConfig` e a entrada em `ConfiguredProviders`.
 
 ## Plano de portagem (ordem sugerida)
 
