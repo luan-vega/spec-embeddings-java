@@ -33,7 +33,15 @@ public final class TestApp {
     }
 
     /** Remonta os serviços a cada comando, como cada execução da CLI faz: a política é lida de novo do disco. */
+    public CliCommands cliWith(br.codesearch.application.port.ProviderCatalog providers) {
+        return build(providers);
+    }
+
     private CliCommands cli() {
+        return build(null);
+    }
+
+    private CliCommands build(br.codesearch.application.port.ProviderCatalog providers) {
         FileRepoRegistry registry = new FileRepoRegistry(home.resolve("repositories.json"));
         FilePolicies policies = new FilePolicies(home.resolve("exclusion-policy.json"));
         FileVectorStore store = new FileVectorStore(home.resolve("index"));
@@ -43,7 +51,7 @@ public final class TestApp {
         IndexService indexer = new IndexService(store, registry, embedder, sparse, policies.load(),
                 new FileEmbeddingCache(home.resolve("cache"), embedder.profile()),
                 entry -> new GitSource(Path.of(entry.path()), entry.ref()), null);
-        return new CliCommands(registry, policies, store, status, runner, () -> embedder, () -> indexer, () -> search);
+        return new CliCommands(registry, policies, store, status, runner, () -> embedder, () -> indexer, () -> search, providers);
     }
 
     /** Repositório Git com uma classe de pagamento e outra de cliente. */
