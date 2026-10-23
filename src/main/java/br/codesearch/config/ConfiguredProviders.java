@@ -45,6 +45,8 @@ class ConfiguredProviders implements ProviderCatalog {
         String describerModel = props.describerModel();
         String chosenEmbedder = props.embedder();
         String chosenDescriber = props.describer();
+        String chosenLlm = props.llm();
+        String llmModel = props.llmModel();
         return List.of(
                 new ProviderInfo("embedder", "ollama", false, chosenEmbedder.equals("ollama"), props.ollamaModel(),
                         props.ollamaUrl(), missing(null, props.ollamaModel(), "CODE_SEARCH_OLLAMA_MODEL")),
@@ -61,6 +63,16 @@ class ConfiguredProviders implements ProviderCatalog {
                         missing("ANTHROPIC_API_KEY", "claude-haiku-5-5", "CODE_SEARCH_DESCRIBER_MODEL")),
                 new ProviderInfo("describer", "gemini", true, chosenDescriber.equals("gemini"),
                         describerModel.isBlank() ? "gemini-2.5-flash" : describerModel, props.geminiBaseUrl(),
-                        missing("GEMINI_API_KEY", "gemini-2.5-flash", "CODE_SEARCH_DESCRIBER_MODEL")));
+                        missing("GEMINI_API_KEY", "gemini-2.5-flash", "CODE_SEARCH_DESCRIBER_MODEL")),
+                new ProviderInfo("llm", "claude", true, chosenLlm.equals("claude"),
+                        llmModel.isBlank() ? "claude-opus-5-5" : llmModel, props.anthropicBaseUrl(),
+                        missing("ANTHROPIC_API_KEY", "claude-opus-5-5", "CODE_SEARCH_LLM_MODEL")),
+                new ProviderInfo("llm", "openai", true, chosenLlm.equals("openai"), llmModel, props.openaiBaseUrl(),
+                        missing("OPENAI_API_KEY", llmModel, "CODE_SEARCH_LLM_MODEL")),
+                new ProviderInfo("llm", "gemini", true, chosenLlm.equals("gemini"),
+                        llmModel.isBlank() ? "gemini-2.5-flash" : llmModel, props.geminiBaseUrl(),
+                        missing("GEMINI_API_KEY", "gemini-2.5-flash", "CODE_SEARCH_LLM_MODEL")),
+                new ProviderInfo("llm", "ollama", false, chosenLlm.equals("ollama"), llmModel, props.ollamaUrl(),
+                        missing(null, llmModel, "CODE_SEARCH_LLM_MODEL")));
     }
 }

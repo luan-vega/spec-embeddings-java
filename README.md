@@ -40,12 +40,14 @@ mvn spring-boot:run # sobe em 127.0.0.1:8765
 
 ## Provedores de IA
 
-O padrão é 100% local (Ollama, zero egress). Provedores externos são opcionais e escolhidos por comando, sem mexer no código:
+Busca e indexação são locais por padrão (Ollama). A pergunta (`ask`) usa a Claude por padrão. Todo provedor externo é
+escolhido por comando, sem mexer no código:
 
 | Papel | Opções | Escolha |
 |---|---|---|
 | embedder (consultas e documentos) | `ollama` (local), `openai`, `gemini` | `--embedder X` ou `CODE_SEARCH_EMBEDDER` |
 | describer (frase em inglês por método, na indexação) | `ollama` (local), `openai`, `claude`, `gemini` | `--describer X` ou `CODE_SEARCH_DESCRIBER` |
+| llm (pergunta: `ask`, `POST /v1/ask`, MCP `ask_code`) | `claude` (padrão), `openai`, `gemini`, `ollama` (local) | `--llm X` ou `CODE_SEARCH_LLM` |
 
 - **Externo = o texto sai da máquina** (código dos métodos e consultas). Só funciona com `--allow-remote` no comando (ou
   `CODE_SEARCH_ALLOW_REMOTE=1`), e um aviso em stderr diz para onde os dados vão.
@@ -74,8 +76,32 @@ export ANTHROPIC_API_KEY=...        # no ambiente, nunca no repositório
 code-search index --describer claude --allow-remote
 ```
 
-Para acrescentar outro provedor, implemente a porta `Embedder` ou `ChunkDescriber` em `adapter.out`, acrescente um `case`
+Para acrescentar outro provedor, implemente a porta `Embedder`, `ChunkDescriber` ou `LanguageModel` em `adapter.out`, acrescente um `case`
 em `CodeSearchConfig` e a entrada em `ConfiguredProviders`.
+
+## Pergunta em linguagem natural (ask)
+
+`search` devolve trechos; `ask` responde a pergunta em três passos:
+
+1. **Validar e reescrever** (modelo rápido, uma chamada): decide se dá para buscar ou se falta dado. Se falta (por exemplo
+   "como mapear esta variável" sem dizer qual), devolve `needs_clarification` com até 3 perguntas e não busca nada. Se dá,
+   extrai identificadores Java e uma frase de busca em inglês.
+2. **Buscar** sem LLM: semântica com a frase reescrita, lexical com os identificadores e semântica com a pergunta original,
+   fundidas por RRF.
+3. **Responder** (modelo forte, uma chamada) só com os trechos achados, citando cada um como `[n]`; `not_found` quando eles
+   não bastam. A resposta é conferida sem LLM: citação para trecho inexistente, identificador entre crases que não aparece em
+   nenhum trecho e resposta sem citação viram `warnings`.
+
+```
+export ANTHROPIC_API_KEY=...
+code-search ask "como é calculado o juros composto da parcela?" --allow-remote [--repo ID]... [--top-k 8] [--json]
+```
+
+- Modelos padrão na Claude: `claude-haiku-5-5` valida (`CODE_SEARCH_LLM_FAST_MODEL`), `claude-opus-5-5` responde
+  (`CODE_SEARCH_LLM_MODEL`). OpenAI e Ollama pedem `CODE_SEARCH_LLM_MODEL`; o modelo rápido usa o mesmo se não for dado.
+- O que sai da máquina: a pergunta (validação) e a pergunta com os trechos achados (resposta). Pergunta com cara de segredo
+  (chave AWS, token, senha) é recusada antes de chamar o modelo.
+- `timings_ms` traz o tempo de cada passo; `plan` mostra as buscas feitas.
 
 ## Plano de portagem (ordem sugerida)
 

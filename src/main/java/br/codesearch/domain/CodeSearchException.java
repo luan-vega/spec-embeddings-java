@@ -12,6 +12,7 @@ public class CodeSearchException extends RuntimeException {
             Map.entry("profile_mismatch", 409),
             Map.entry("embedder_unavailable", 503),
             Map.entry("describer_unavailable", 503),
+            Map.entry("llm_unavailable", 503),
             Map.entry("vector_store_unavailable", 503),
             Map.entry("store_busy", 503),
             Map.entry("overloaded", 503),

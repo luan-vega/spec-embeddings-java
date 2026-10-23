@@ -153,4 +153,17 @@ class HttpApiTest {
         assertThat(raw("localhost:" + port, "/health")).startsWith("HTTP/1.1 200");
         assertThat(raw("[::1]:" + port, "/health")).startsWith("HTTP/1.1 200");
     }
+
+    @Test
+    void askValidatesTheBodyAndRefusesAnExternalModelWithoutPermission() throws Exception {
+        HttpResponse<String> bad = send("POST", "/v1/ask", "application/json", "{\"query\":\"x\"}", null);
+        assertThat(bad.statusCode()).isEqualTo(400);
+        assertThat(send("POST", "/v1/ask", "text/plain", "{\"question\":\"x\"}", null).statusCode()).isEqualTo(400);
+
+        HttpResponse<String> gated = send("POST", "/v1/ask", "application/json", "{\"question\":\"onde fica o estorno?\"}", null);
+        assertThat(gated.statusCode()).isEqualTo(503);
+        JsonNode error = JSON.readTree(gated.body()).get("error");
+        assertThat(error.get("code").asString()).isEqualTo("llm_unavailable");
+        assertThat(error.get("message").asString()).contains("--allow-remote");
+    }
 }

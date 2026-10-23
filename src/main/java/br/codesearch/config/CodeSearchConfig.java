@@ -6,12 +6,15 @@ import br.codesearch.adapter.out.file.FileRepoRegistry;
 import br.codesearch.adapter.out.file.FileVectorStore;
 import br.codesearch.adapter.out.git.GitSource;
 import br.codesearch.adapter.out.describer.OllamaDescriber;
+import br.codesearch.adapter.out.ollama.OllamaChat;
 import br.codesearch.adapter.out.ollama.OllamaClient;
 import br.codesearch.adapter.out.ollama.OllamaEmbedder;
 import br.codesearch.adapter.out.remote.GeminiEmbedder;
 import br.codesearch.adapter.out.remote.OpenAiEmbedder;
+import br.codesearch.adapter.out.remote.RemoteChats;
 import br.codesearch.adapter.out.remote.RemoteDescribers;
 import br.codesearch.adapter.out.sparse.JavaSparseEncoder;
+import br.codesearch.application.AskService;
 import br.codesearch.application.BoundedRunner;
 import br.codesearch.application.IndexService;
 import br.codesearch.application.SearchService;
@@ -19,6 +22,7 @@ import br.codesearch.application.StatusService;
 import br.codesearch.application.port.ChunkDescriber;
 import br.codesearch.application.port.EmbeddingCache;
 import br.codesearch.application.port.Embedder;
+import br.codesearch.application.port.LanguageModel;
 import br.codesearch.application.port.PolicyStore;
 import br.codesearch.application.port.RepoCatalog;
 import br.codesearch.application.port.SparseEncoder;
@@ -143,6 +147,52 @@ class CodeSearchConfig {
     @Lazy
     SearchService searchService(VectorStore store, RepoCatalog registry, Embedder embedder, SparseEncoder sparse) {
         return new SearchService(store, registry, embedder, sparse);
+    }
+
+    /**
+     * Modelo da pergunta. {@code fast}: o que valida e reescreve (vê só a pergunta); senão o que responde (vê a pergunta e
+     * os trechos de código achados). Externo só com permissão explícita, como o embedder e o descritor.
+     */
+    LanguageModel languageModel(
+            CodeSearchProperties props, boolean fast, String openaiKey, String anthropicKey, String geminiKey) {
+        String chosen = fast && !props.llmFastModel().isBlank() ? props.llmFastModel() : props.llmModel();
+        String sends = fast ? "as perguntas" : "as perguntas e os trechos de código achados";
+        String role = fast ? "llm (validação)" : "llm (resposta)";
+        switch (props.llm()) {
+            case "claude" -> {
+                RemoteGate.require(props.allowRemote(), "llm", "claude", "llm_unavailable");
+                String model = !chosen.isBlank() ? chosen : fast ? "claude-haiku-5-5" : "claude-opus-5-5";
+                var m = new RemoteChats.Claude(props.anthropicBaseUrl(), anthropicKey, model, fast ? "low" : "medium");
+                RemoteGate.announce(System.err, role, "claude", m.host(), sends);
+                return m;
+            }
+            case "openai" -> {
+                RemoteGate.require(props.allowRemote(), "llm", "openai", "llm_unavailable");
+                var m = new RemoteChats.OpenAi(props.openaiBaseUrl(), openaiKey, chosen);
+                RemoteGate.announce(System.err, role, "openai", m.host(), sends);
+                return m;
+            }
+            case "gemini" -> {
+                RemoteGate.require(props.allowRemote(), "llm", "gemini", "llm_unavailable");
+                var m = new RemoteChats.Gemini(props.geminiBaseUrl(), geminiKey, chosen.isBlank() ? "gemini-2.5-flash" : chosen);
+                RemoteGate.announce(System.err, role, "gemini", m.host(), sends);
+                return m;
+            }
+            case "ollama" -> {
+                return new OllamaChat(chosen, new OllamaClient(props.ollamaUrl(), Duration.ofSeconds(120)));
+            }
+            default -> throw new CodeSearchException("llm_unavailable",
+                    "unknown llm '" + props.llm() + "'; available: claude, openai, gemini, ollama");
+        }
+    }
+
+    @Bean
+    @Lazy
+    AskService askService(
+            CodeSearchProperties props, SearchService search, PolicyStore policies, @Value("${OPENAI_API_KEY:}") String openaiKey,
+            @Value("${ANTHROPIC_API_KEY:}") String anthropicKey, @Value("${GEMINI_API_KEY:}") String geminiKey) {
+        return new AskService(search, languageModel(props, true, openaiKey, anthropicKey, geminiKey),
+                languageModel(props, false, openaiKey, anthropicKey, geminiKey), policies.load());
     }
 
     @Bean

@@ -25,7 +25,7 @@ public class CodeSearchApplication {
     record Split(List<String> command, List<String> properties) {}
 
     /**
-     * Escolha de provedor por comando: {@code --embedder X}, {@code --describer X} e {@code --allow-remote} valem para qualquer
+     * Escolha de provedor por comando: {@code --embedder X}, {@code --describer X}, {@code --llm X} e {@code --allow-remote} valem para qualquer
      * comando e viram {@code code-search.*}, que têm precedência sobre as variáveis de ambiente.
      */
     static Split splitProviderOptions(String[] args) {
@@ -35,6 +35,7 @@ public class CodeSearchApplication {
             switch (args[i]) {
                 case "--embedder" -> properties.add("--code-search.embedder=" + valueAfter(args, i++));
                 case "--describer" -> properties.add("--code-search.describer=" + valueAfter(args, i++));
+                case "--llm" -> properties.add("--code-search.llm=" + valueAfter(args, i++));
                 case "--allow-remote" -> properties.add("--code-search.allow-remote=true");
                 default -> command.add(args[i]);
             }

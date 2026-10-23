@@ -43,7 +43,42 @@ class RemoteGateTest {
     }
 
     static CodeSearchProperties props(String embedder, String describer, boolean allowRemote, String base) {
-        return new CodeSearchProperties("", embedder, "", "", "", "", 0, 0, allowRemote, describer, "", base, "", 0, base, base, "", 0);
+        return new CodeSearchProperties("", embedder, "", "", "", "", 0, 0, allowRemote, describer, "", base, "", 0, base, base, "", 0, "", "", "");
+    }
+
+    static CodeSearchProperties llmProps(String llm, boolean allowRemote, String base) {
+        return new CodeSearchProperties("", "ollama", "", "", "", "", 0, 0, allowRemote, "", "", base, "", 0, base, base, "", 0, llm, "", "");
+    }
+
+    @Test
+    void askModelsDefaultToClaudeAndNeedPermission() throws Exception {
+        assertThat(llmProps("", false, "").llm()).isEqualTo("claude");
+        for (String name : new String[] {"claude", "openai", "gemini"}) {
+            assertThatThrownBy(() -> new CodeSearchConfig().languageModel(llmProps(name, false, "http://127.0.0.1:1"), true, "k", "k", "k"))
+                    .isInstanceOfSatisfying(CodeSearchException.class, e -> {
+                        assertThat(e.code()).isEqualTo("llm_unavailable");
+                        assertThat(e.getMessage()).contains("external").contains("--allow-remote");
+                    });
+        }
+        assertThatThrownBy(() -> new CodeSearchConfig().languageModel(llmProps("cohere", true, ""), true, "", "", ""))
+                .hasMessageContaining("available: claude, openai, gemini, ollama");
+
+        String base = fake();
+        PrintStream oldErr = System.err;
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(err, true, StandardCharsets.UTF_8));
+        try {
+            var fast = new CodeSearchConfig().languageModel(llmProps("claude", true, base), true, "", "sk-ant", "");
+            var strong = new CodeSearchConfig().languageModel(llmProps("claude", true, base), false, "", "sk-ant", "");
+            assertThat(fast.modelId()).isEqualTo("claude:claude-haiku-5-5");
+            assertThat(strong.modelId()).isEqualTo("claude:claude-opus-5-5");
+            assertThat(fast.complete("s", "u", 10)).isEqualTo("Does a thing.");
+        } finally {
+            System.setErr(oldErr);
+        }
+        String notice = err.toString(StandardCharsets.UTF_8);
+        assertThat(notice).contains("llm (validação) 'claude' é EXTERNO; as perguntas saem")
+                .contains("llm (resposta) 'claude' é EXTERNO; as perguntas e os trechos de código achados saem").doesNotContain("sk-ant");
     }
 
     @Test
