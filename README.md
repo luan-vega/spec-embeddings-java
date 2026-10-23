@@ -1,47 +1,287 @@
 # code-search (Java, Spring Boot)
 
-Versão em Java do serviço de busca híbrida local em repositórios Java (embeddings do Ollama + BM25 + RRF), a partir da
-versão Python em `luan-vega/code-search-embeddings`. Mesma arquitetura hexagonal e mesma regra de **zero egress**.
+Serviço de busca de código em vários repositórios Java ao mesmo tempo. Combina busca semântica (embeddings), busca lexical
+(BM25 sobre identificadores) e fusão RRF, e responde perguntas em linguagem natural citando os trechos achados. Roda como
+linha de comando, servidor HTTP local (só `127.0.0.1`) e servidor MCP para agentes como o Claude Code.
 
-## Estado
+É a versão Java de `luan-vega/code-search-embeddings` (Python), com a mesma arquitetura hexagonal, os mesmos formatos de
+avaliação e paridade conferida em teste.
 
-- Esqueleto: Maven (Java 21, Spring Boot 4.1), servidor preso a `127.0.0.1:8765`, regras de camadas com ArchUnit, CI em
-  Linux e Windows.
-- **Domain portado** (puro, sem Spring): `EmbeddingProfile`, `CanonicalJson`, `JavaChunker`, `SparseTokenizer`, `Fusion`
-  (RRF e colapso de sobrepostos), `ExclusionPolicy` (com filtro de segredos), `ChunkDraft`, `ChunkIds` (UUIDv5).
-- **Paridade com o Python** (`PythonParityTest`): `scripts/generate_golden.py` roda o código Python e grava
-  `src/test/resources/golden/golden.json` (79 chunks de 18 arquivos Java, tokenizador, RRF, política, ids e JSON canônico);
-  o teste exige resultado idêntico. Se o Python mudar, regenere os fixtures:
-  `python scripts/generate_golden.py <caminho>/code-search-embeddings/src`.
-- Diferença conhecida: ordenação e comprimento seguem pontos de código no `len`, mas a comparação de strings no desempate usa
-  unidades UTF-16 (só difere para caracteres fora do plano básico).
+- [Visão geral](#visão-geral)
+- [Como rodar](#como-rodar)
+- [Arquitetura](#arquitetura)
+- [Fluxos](#fluxos)
+- [Provedores de IA](#provedores-de-ia)
+- [Pergunta em linguagem natural (ask)](#pergunta-em-linguagem-natural-ask)
+- [Referência: comandos, HTTP e MCP](#referência-comandos-http-e-mcp)
+- [Configuração](#configuração)
+- [Armazenamento](#armazenamento)
+- [Segurança](#segurança)
+- [Desenvolvimento](#desenvolvimento)
+- [Estado e próximos passos](#estado-e-próximos-passos)
 
-- **Funcional de ponta a ponta**: indexação e busca híbrida (BM25 + denso + RRF), armazenamento em arquivo com gerações
-  blue/green, HTTP em loopback, MCP por stdio (somente leitura), CLI e o gate `eval` (mesmo formato e limiares do Python).
-- **Provedores de IA intercambiáveis**: Ollama (local) e OpenAI, Claude e Gemini (externos, só com opt-in). Ver abaixo.
+## Visão geral
 
-## Camadas
+```mermaid
+flowchart LR
+    U["Você no terminal"] --> CLI
+    A["Claude Code ou outro agente"] --> MCP
+    S["Scripts e ferramentas"] --> HTTP
+
+    subgraph app["code-search (um processo Java)"]
+        CLI["CLI"]
+        HTTP["HTTP 127.0.0.1:8765"]
+        MCP["MCP por stdio"]
+        SVC["Casos de uso: indexar, buscar, perguntar, status, avaliar"]
+        CLI --> SVC
+        HTTP --> SVC
+        MCP --> SVC
+    end
+
+    SVC --> GIT[("Repositórios Git<br/>só arquivos commitados")]
+    SVC --> IDX[("Índice em disco<br/>~/.workflows/code-search")]
+    SVC --> EMB["Embeddings<br/>Ollama local, OpenAI ou Gemini"]
+    SVC --> LLM["LLM do ask<br/>Claude, OpenAI, Gemini ou Ollama"]
+```
+
+| O que você quer | Comando |
+|---|---|
+| Achar métodos por conceito, nome ou trecho de código | `search "juros compostos da parcela"` |
+| Uma resposta explicada, com citações e plano de execução | `ask "como é calculado o juros composto?"` |
+| Dar a um agente acesso de leitura ao código indexado | `mcp` (ferramentas `search_code`, `ask_code`, `code_search_status`) |
+| Medir a qualidade da busca com um dataset rotulado | `eval --dataset ... --thresholds ...` |
+
+## Como rodar
+
+### 1. Pré-requisitos
+
+| Item | Para quê | Observação |
+|---|---|---|
+| Java 21 (JDK) | rodar e compilar | o CI usa Temurin 21 |
+| Maven 3.9+ | compilar e testar | |
+| Git | ler os repositórios | só o que está commitado é indexado |
+| Ollama + um modelo de embedding | embeddings locais (padrão) | ex.: `ollama pull qwen3-embedding:0.6b`; a app nunca baixa modelo sozinha |
+| `ANTHROPIC_API_KEY` | `ask` com a Claude (padrão) | opcional; também dá para usar OpenAI, Gemini ou Ollama |
+
+Sem Ollama, dá para indexar com `--embedder openai` ou `--embedder gemini` (veja [Provedores de IA](#provedores-de-ia)).
+
+### 2. Compilar
+
+```bash
+mvn -B verify                    # compila e roda os testes
+mvn -B -DskipTests package       # só gera o jar: target/code-search-0.1.0-SNAPSHOT.jar
+```
+
+Crie um atalho para não repetir o `java -jar` (os exemplos daqui em diante usam `code-search`):
+
+```bash
+# Linux, macOS ou Git Bash no Windows
+alias code-search='java -jar /caminho/para/spec-embeddings-java/target/code-search-0.1.0-SNAPSHOT.jar'
+```
+
+```powershell
+# PowerShell
+function code-search { java -jar C:\caminho\para\spec-embeddings-java\target\code-search-0.1.0-SNAPSHOT.jar @args }
+```
+
+### 3. Configurar o embedder
+
+```bash
+export CODE_SEARCH_OLLAMA_MODEL=qwen3-embedding:0.6b   # o modelo precisa estar instalado no Ollama
+code-search ollama-probe                                # mostra modelo, dimensão e profile_id
+code-search providers                                   # o que está configurado e o que falta em cada provedor
+```
+
+### 4. Indexar
+
+```bash
+code-search policy init                                  # grava a política de exclusão padrão (uma vez)
+code-search repo add pagamentos /caminho/svc-pagamentos  # raiz padrão: src/main/java
+code-search repo add cadastro /caminho/svc-cadastro --root src/main/java --root modulo/src/main/java
+code-search index                                        # indexa os repositórios habilitados
+code-search status                                       # geração ativa, chunks e revisão de cada repo
+```
+
+A indexação é incremental: repositório sem commit novo é pulado, e embeddings já calculados vêm do cache. Rode `index` de
+novo depois de cada commit que deve aparecer na busca.
+
+### 5. Buscar e perguntar
+
+```bash
+code-search search "calcular juros compostos da parcela"
+code-search search calcularJurosComposto --mode lexical --repo pagamentos --top-k 5
+code-search search "double m(double v, int n) { return v * Math.pow(1.02, n); }" --mode semantic --json
+
+export ANTHROPIC_API_KEY=...                             # no ambiente, nunca em arquivo do repositório
+code-search ask "como é calculado o juros composto da parcela?" --allow-remote
+```
+
+### 6. Servidor HTTP
+
+```bash
+code-search serve                       # 127.0.0.1:8765 (só aceita loopback)
+curl -s http://127.0.0.1:8765/ready
+curl -s -X POST http://127.0.0.1:8765/v1/search -H 'Content-Type: application/json' \
+     -d '{"query": "estornar pagamento", "top_k": 5}'
+curl -s -X POST http://127.0.0.1:8765/v1/ask -H 'Content-Type: application/json' \
+     -d '{"question": "onde o estorno devolve o dinheiro ao comprador?"}'
+```
+
+Para o `/v1/ask` usar um provedor externo, suba o servidor com `CODE_SEARCH_ALLOW_REMOTE=1` e a chave no ambiente.
+
+### 7. MCP (Claude Code e outros agentes)
+
+O servidor MCP fala JSON-RPC por stdio e é somente leitura. Exemplo de `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "code-search": {
+      "command": "java",
+      "args": ["-jar", "/caminho/para/code-search-0.1.0-SNAPSHOT.jar", "mcp"],
+      "env": { "CODE_SEARCH_OLLAMA_MODEL": "qwen3-embedding:0.6b" }
+    }
+  }
+}
+```
+
+Não coloque chaves de API nesse arquivo. Para a ferramenta `ask_code` usar a Claude, deixe `ANTHROPIC_API_KEY` e
+`CODE_SEARCH_ALLOW_REMOTE=1` no ambiente de onde o agente é aberto.
+
+## Arquitetura
+
+Arquitetura hexagonal: o núcleo (`domain` e `application`) não conhece Spring, HTTP, Ollama nem disco; tudo isso fica em
+adapters ligados por portas. As regras de dependência são verificadas em `ArchitectureTest` (ArchUnit) a cada build.
+
+```mermaid
+flowchart LR
+    subgraph in["adapter.in (entrada)"]
+        direction TB
+        CLI["cli<br/>CliCommands, CliRunner"]
+        WEB["web<br/>HttpApi, LoopbackHostFilter"]
+        MCPS["mcp<br/>McpServer"]
+    end
+
+    subgraph appl["application (núcleo)"]
+        direction TB
+        UC["Casos de uso<br/>IndexService, SearchService, AskService<br/>StatusService, Evaluation"]
+        PORTS["Portas (application.port)<br/>Embedder, ChunkDescriber, LanguageModel<br/>VectorStore, RepoRegistry, SourceReader<br/>EmbeddingCache, PolicyStore, SparseEncoder"]
+        DOM["domain (regras puras)<br/>JavaChunker, SparseTokenizer, Fusion RRF<br/>ExclusionPolicy, EmbeddingProfile, ChunkIds"]
+        UC --> PORTS
+        UC --> DOM
+    end
+
+    subgraph out["adapter.out (saída)"]
+        direction TB
+        O1["ollama<br/>OllamaEmbedder, OllamaChat"]
+        O2["remote<br/>OpenAI, Gemini, Claude"]
+        O3["describer<br/>OllamaDescriber"]
+        O4["file<br/>FileVectorStore, FileRepoRegistry,<br/>FileEmbeddingCache, FilePolicies"]
+        O5["git<br/>GitSource"]
+        O6["sparse<br/>JavaSparseEncoder"]
+    end
+
+    CFG["config<br/>CodeSearchConfig, RemoteGate,<br/>ConfiguredProviders"]
+
+    in --> UC
+    out -. implementa .-> PORTS
+    CFG -. monta .-> in
+    CFG -. monta .-> out
+```
 
 | Pacote | Papel | Pode depender de |
 |---|---|---|
 | `br.codesearch.domain` | tipos e regras puras | nada (nem Spring) |
 | `br.codesearch.application` | casos de uso e portas (`application.port`) | domain |
-| `br.codesearch.adapter` | Ollama, armazenamento, Git, HTTP, MCP, CLI | application, domain, frameworks |
-| `br.codesearch.config` | composição: escolhe adapters por propriedade e profile | tudo |
+| `br.codesearch.adapter.in` | CLI, HTTP, MCP | application, domain, frameworks (não `adapter.out`) |
+| `br.codesearch.adapter.out` | Ollama, provedores externos, arquivos, Git | application, domain, frameworks (não `adapter.in`) |
+| `br.codesearch.config` | composição: escolhe adapters por propriedade | tudo |
 
-As regras estão em `ArchitectureTest`.
-
-## Rodar
+### Mapa dos pacotes
 
 ```
-mvn verify          # testes
-mvn spring-boot:run # sobe em 127.0.0.1:8765
+br.codesearch
+├── CodeSearchApplication        ponto de entrada: serve (HTTP) ou um comando de CLI
+├── domain                       JavaChunker, SparseTokenizer, Fusion, ExclusionPolicy, EmbeddingProfile, ChunkIds, ...
+├── application                  IndexService, SearchService, AskService, StatusService, Evaluation, BoundedRunner
+│   └── port                     Embedder, ChunkDescriber, LanguageModel, VectorStore, RepoRegistry, SourceReader, ...
+├── adapter
+│   ├── in
+│   │   ├── cli                  CliCommands, CliRunner, EvalFiles
+│   │   ├── web                  HttpApi, HttpErrors, LoopbackHostFilter
+│   │   ├── mcp                  McpServer
+│   │   └── Payloads             formato JSON compartilhado por HTTP, MCP e CLI
+│   └── out
+│       ├── ollama               OllamaClient, OllamaEmbedder, OllamaChat
+│       ├── remote               OpenAiEmbedder, GeminiEmbedder, RemoteDescribers, RemoteChats, RemoteHttp
+│       ├── describer            OllamaDescriber, DescriberPrompt
+│       ├── file                 FileVectorStore, FileRepoRegistry, FileEmbeddingCache, FilePolicies, ...
+│       ├── git                  GitSource
+│       └── sparse               JavaSparseEncoder
+└── config                       CodeSearchConfig, CodeSearchProperties, RemoteGate, ConfiguredProviders, DataPaths
+```
+
+## Fluxos
+
+### Indexação
+
+```mermaid
+flowchart LR
+    R["repositories.json<br/>repos habilitados"] --> G["GitSource<br/>arquivos da revisão commitada"]
+    G --> P{"Política de exclusão<br/>extensão, pasta, tamanho"}
+    P -- excluído --> X1["ignorado"]
+    P -- ok --> C["JavaChunker<br/>um chunk por método"]
+    C --> SEC{"Contém segredo?"}
+    SEC -- sim --> X2["descartado"]
+    SEC -- não --> DSC["Descritor opcional<br/>frase em inglês"]
+    DSC --> E["Embedder<br/>com cache"]
+    DSC --> B["SparseEncoder<br/>termos BM25"]
+    E --> SEG["Segmento imutável<br/>do repositório"]
+    B --> SEG
+    SEG --> GEN["Nova geração publicada<br/>de forma atômica"]
+```
+
+Repositório sem commit novo é pulado. A troca de geração é atômica: quem está buscando continua lendo a anterior até o fim.
+
+### Busca
+
+```mermaid
+flowchart LR
+    Q["Consulta + filtros<br/>repos, linguagens, caminho"] --> V["Validação<br/>tamanho, modo, top_k"]
+    V --> RES["Resolve repos<br/>conhecidos, habilitados, indexados"]
+    RES --> PR{"Perfil do índice<br/>igual ao do embedder?"}
+    PR -- não --> ERR["profile_mismatch"]
+    PR -- sim --> D["Denso<br/>embedding da consulta"]
+    PR -- sim --> L["Lexical<br/>BM25 dos identificadores"]
+    D --> F["RRF k=60<br/>+ colapso de trechos sobrepostos"]
+    L --> F
+    F --> OUT["top_k resultados<br/>+ cobertura por repo"]
+```
+
+Modos: `hybrid` (padrão, denso + lexical), `semantic` (só denso) e `lexical` (só BM25). A resposta diz quais repositórios
+foram pesquisados e por que algum ficou de fora (`unknown_repo`, `disabled`, `no_index`).
+
+### Pergunta (ask)
+
+```mermaid
+flowchart TB
+    IN["Pergunta"] --> CHK["Checagem sem LLM<br/>vazia, longa, segredo"]
+    CHK --> VAL["Modelo rápido<br/>valida e reescreve"]
+    VAL --> OK{"Dá para buscar?"}
+    OK -- "não, falta dado" --> CLAR["needs_clarification<br/>até 3 perguntas"]
+    OK -- sim --> S["3 buscas sem LLM<br/>semântica reescrita, lexical, semântica original"]
+    S --> M["Fusão RRF"]
+    M --> NONE{"Achou trechos?"}
+    NONE -- não --> NR["no_results"]
+    NONE -- sim --> ANS["Modelo forte responde<br/>só com os trechos, citando n"]
+    ANS --> CHECK["Conferência sem LLM<br/>citações e identificadores"]
+    CHECK --> RESP["answered ou not_found<br/>+ fontes, avisos, tempos"]
 ```
 
 ## Provedores de IA
 
-Busca e indexação são locais por padrão (Ollama). A pergunta (`ask`) usa a Claude por padrão. Todo provedor externo é
-escolhido por comando, sem mexer no código:
+Busca e indexação usam o Ollama por padrão. A pergunta (`ask`) usa a Claude por padrão. Todo provedor externo é escolhido
+por comando ou variável de ambiente, sem mexer no código:
 
 | Papel | Opções | Escolha |
 |---|---|---|
@@ -49,68 +289,195 @@ escolhido por comando, sem mexer no código:
 | describer (frase em inglês por método, na indexação) | `ollama` (local), `openai`, `claude`, `gemini` | `--describer X` ou `CODE_SEARCH_DESCRIBER` |
 | llm (pergunta: `ask`, `POST /v1/ask`, MCP `ask_code`) | `claude` (padrão), `openai`, `gemini`, `ollama` (local) | `--llm X` ou `CODE_SEARCH_LLM` |
 
-- **Externo = o texto sai da máquina** (código dos métodos e consultas). Só funciona com `--allow-remote` no comando (ou
-  `CODE_SEARCH_ALLOW_REMOTE=1`), e um aviso em stderr diz para onde os dados vão.
+- **Externo = o texto sai da máquina** (código dos métodos, consultas, perguntas). Só funciona com `--allow-remote` no comando
+  (ou `CODE_SEARCH_ALLOW_REMOTE=1`), e um aviso em stderr diz o que vai e para onde.
 - **Chaves só por variável de ambiente**: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`. Nunca em arquivo de
   configuração, log ou mensagem de erro. HTTPS é obrigatório (HTTP só em loopback, para servidores compatíveis locais).
-- A Anthropic não tem API de embeddings: a Claude só descreve. Boa combinação: embedder local + describer externo só na
-  indexação (as consultas não saem da máquina).
+- A Anthropic não tem API de embeddings: a Claude descreve métodos e responde perguntas, mas não gera embeddings.
 - Trocar de embedder ou de describer muda o perfil do índice: use um `CODE_SEARCH_HOME` separado para cada combinação ou
   reindexe.
-- Modelos: `CODE_SEARCH_OLLAMA_MODEL`, `CODE_SEARCH_OPENAI_MODEL` (padrão `text-embedding-3-small`),
-  `CODE_SEARCH_GEMINI_MODEL` (padrão `gemini-embedding-001`), `CODE_SEARCH_DESCRIBER_MODEL` (padrão `claude-haiku-5-5` na Claude
-  e `gemini-2.5-flash` no Gemini). Dimensões opcionais: `CODE_SEARCH_OPENAI_DIMENSIONS`, `CODE_SEARCH_GEMINI_DIMENSIONS`.
-  Endereços: `CODE_SEARCH_OPENAI_BASE_URL` (aceita servidores compatíveis com a API da OpenAI),
-  `CODE_SEARCH_GEMINI_BASE_URL`, `CODE_SEARCH_ANTHROPIC_BASE_URL`.
+- `code-search providers [--json]` mostra o que está configurado e o que falta em cada provedor, sem chamar nenhum e sem
+  mostrar chaves.
 
-Veja o que está configurado e o que falta em cada provedor (não chama nenhum, não mostra chaves):
+Exemplos:
 
-```
-code-search providers [--json]
-```
-
-Exemplo, indexando com embedder local e describer Claude:
-
-```
-export ANTHROPIC_API_KEY=...        # no ambiente, nunca no repositório
+```bash
+# indexar com embedder local e descrição de métodos pela Claude
+export ANTHROPIC_API_KEY=...
 code-search index --describer claude --allow-remote
+
+# tudo pela OpenAI
+export OPENAI_API_KEY=...
+code-search index --embedder openai --allow-remote
+code-search ask "onde é calculado o frete?" --embedder openai --llm openai --allow-remote   # pede CODE_SEARCH_LLM_MODEL
+
+# pergunta pelo Gemini
+export GEMINI_API_KEY=...
+code-search ask "onde é calculado o frete?" --llm gemini --allow-remote
 ```
 
-Para acrescentar outro provedor, implemente a porta `Embedder`, `ChunkDescriber` ou `LanguageModel` em `adapter.out`, acrescente um `case`
-em `CodeSearchConfig` e a entrada em `ConfiguredProviders`.
+Para acrescentar outro provedor, implemente a porta `Embedder`, `ChunkDescriber` ou `LanguageModel` em `adapter.out`,
+acrescente um `case` em `CodeSearchConfig` e a entrada em `ConfiguredProviders`.
 
 ## Pergunta em linguagem natural (ask)
 
-`search` devolve trechos; `ask` responde a pergunta em três passos:
+`search` devolve trechos; `ask` responde a pergunta em três passos (veja o [diagrama](#pergunta-ask)):
 
 1. **Validar e reescrever** (modelo rápido, uma chamada): decide se dá para buscar ou se falta dado. Se falta (por exemplo
    "como mapear esta variável" sem dizer qual), devolve `needs_clarification` com até 3 perguntas e não busca nada. Se dá,
-   extrai identificadores Java e uma frase de busca em inglês.
+   extrai identificadores Java e uma frase de busca em inglês. Resposta fora do formato não bloqueia: vira busca com a
+   pergunta original.
 2. **Buscar** sem LLM: semântica com a frase reescrita, lexical com os identificadores e semântica com a pergunta original,
    fundidas por RRF.
 3. **Responder** (modelo forte, uma chamada) só com os trechos achados, citando cada um como `[n]`; `not_found` quando eles
-   não bastam. A resposta é conferida sem LLM: citação para trecho inexistente, identificador entre crases que não aparece em
-   nenhum trecho e resposta sem citação viram `warnings`.
+   não bastam. Quando a pergunta pede como fazer algo, a resposta traz um plano de execução numerado. A resposta é conferida
+   sem LLM: citação para trecho inexistente, identificador entre crases que não aparece em nenhum trecho e resposta sem
+   citação viram `warnings`.
 
-```
-export ANTHROPIC_API_KEY=...
+```bash
 code-search ask "como é calculado o juros composto da parcela?" --allow-remote [--repo ID]... [--top-k 8] [--json]
 ```
 
+| Status | Significado | Saída da CLI |
+|---|---|---|
+| `answered` | resposta com citações | 0 |
+| `not_found` | os trechos achados não respondem | 1 |
+| `no_results` | a busca não achou nada | 1 |
+| `needs_clarification` | falta dado; veja `questions` | 1 |
+
 - Modelos padrão na Claude: `claude-haiku-5-5` valida (`CODE_SEARCH_LLM_FAST_MODEL`), `claude-opus-5-5` responde
-  (`CODE_SEARCH_LLM_MODEL`). OpenAI e Ollama pedem `CODE_SEARCH_LLM_MODEL`; o modelo rápido usa o mesmo se não for dado.
+  (`CODE_SEARCH_LLM_MODEL`). No Gemini, `gemini-2.5-flash` nos dois. OpenAI e Ollama pedem `CODE_SEARCH_LLM_MODEL`; o modelo
+  rápido usa o mesmo se não for dado.
 - O que sai da máquina: a pergunta (validação) e a pergunta com os trechos achados (resposta). Pergunta com cara de segredo
   (chave AWS, token, senha) é recusada antes de chamar o modelo.
-- `timings_ms` traz o tempo de cada passo; `plan` mostra as buscas feitas.
+- A resposta JSON traz `plan` (intenção, identificadores, buscas feitas), `sources` (com `cited`), `warnings`, `models` e
+  `timings_ms` (tempo de cada passo).
 
-## Plano de portagem (ordem sugerida)
+## Referência: comandos, HTTP e MCP
 
-1. ~~`domain`~~ (feito): modelo, chunker de métodos Java, tokenizador BM25, fusão RRF, política de exclusão e segredos, com
-   testes de paridade contra o Python.
-2. `application`: `IndexService`, `SearchService`, avaliação (gate UC1/UC2/UC3 com o mesmo JSONL e limiares).
-3. Adapters de saída: Ollama (Spring AI, `truncate=false`, sem baixar modelo), armazenamento em arquivo com gerações
-   blue/green, Git (somente commits), registro, cache de embeddings.
-4. Adapters de entrada: HTTP (`/health`, `/ready`, `POST /v1/search`), MCP (somente leitura) e CLI.
-5. Rodar o gate nas duas versões com o mesmo dataset e comparar rankings.
+### Comandos
 
-Ver as análises em `spec_embeddings/` do projeto (migração para Java e uso de Spring AI e LangChain4j).
+| Comando | O que faz |
+|---|---|
+| `repo add <id> <caminho> [--root R]...` | registra um repositório Git (raiz padrão `src/main/java`) |
+| `repo list` / `repo remove <id>` | lista ou remove do registro (os snapshots não são apagados) |
+| `policy init [--force]` | grava a política de exclusão padrão |
+| `providers [--json]` | provedores de IA e o que falta em cada um |
+| `ollama-probe` | modelo, digest, dimensão e `profile_id` do embedder |
+| `index [--repo ID]... [--force]` | indexa os repositórios habilitados (incremental; `--force` refaz) |
+| `search <consulta> [--mode M] [--repo ID]... [--language L]... [--path-prefix P] [--top-k N] [--json]` | busca |
+| `ask <pergunta> [--repo ID]... [--language L]... [--path-prefix P] [--top-k N] [--json]` | pergunta com resposta |
+| `status [--json]` | estado do índice e dos repositórios |
+| `rollback` | volta para a geração anterior |
+| `prune [--tmp-max-age SEGUNDOS]` | apaga gerações e segmentos sem referência |
+| `serve [--host H] [--port N]` | HTTP local (só loopback) |
+| `mcp` | servidor MCP por stdio (somente leitura) |
+| `eval --dataset F --thresholds F [--repo ID]... [--out F]` | gate de avaliação; sai com 1 se reprovar (ver `eval/README.md`) |
+
+Opções de provedor valem em qualquer comando: `--embedder X`, `--describer X`, `--llm X`, `--allow-remote`.
+
+### HTTP
+
+| Método e caminho | Corpo | Resposta |
+|---|---|---|
+| `GET /health` | | `{"status": "ok"}`, mesmo sob carga |
+| `GET /ready` | | 200 ou 503 com `checks` (embedder, índice, perfil) |
+| `POST /v1/search` | `query`, `mode`, `repos`, `languages`, `path_prefix`, `top_k` | `status`, `results`, `coverage`, `index`, `request_id` |
+| `POST /v1/ask` | `question`, `repos`, `languages`, `path_prefix`, `top_k` | `status`, `answer`, `questions`, `plan`, `sources`, `warnings`, `coverage`, `models`, `timings_ms` |
+
+Corpo JSON com `Content-Type: application/json`, até 64 KB; campo desconhecido é erro 400. Erros saem como
+`{"error": {"code", "message", "request_id"}}` com código estável (`invalid_request`, `no_repos_available`,
+`profile_mismatch`, `embedder_unavailable`, `llm_unavailable`, `overloaded`, `timeout`...).
+
+### MCP
+
+| Ferramenta | Para quê |
+|---|---|
+| `search_code` | busca híbrida, semântica ou lexical (mesmos campos do `/v1/search`) |
+| `ask_code` | pergunta com resposta citada (mesmos campos do `/v1/ask`) |
+| `code_search_status` | estado do índice e dos repositórios |
+
+Todas são somente leitura: nenhuma ferramenta indexa ou apaga nada.
+
+## Configuração
+
+Os nomes são os mesmos da versão Python. Opções de linha de comando têm precedência sobre o ambiente.
+
+| Variável | Padrão | Para quê |
+|---|---|---|
+| `CODE_SEARCH_HOME` | `~/.workflows/code-search` | onde ficam registro, política, cache e índice |
+| `CODE_SEARCH_EMBEDDER` | `ollama` | `ollama`, `openai` ou `gemini` |
+| `CODE_SEARCH_OLLAMA_URL` | `http://127.0.0.1:11434` | só loopback |
+| `CODE_SEARCH_OLLAMA_MODEL` | (obrigatório com Ollama) | modelo de embedding instalado |
+| `CODE_SEARCH_DOC_PREFIX` / `CODE_SEARCH_QUERY_PREFIX` | vazio | prefixos que alguns modelos pedem para documento e consulta |
+| `CODE_SEARCH_DESCRIBER` / `CODE_SEARCH_DESCRIBER_MODEL` | vazio | descrição opcional dos métodos na indexação |
+| `CODE_SEARCH_LLM` | `claude` | modelo do `ask`: `claude`, `openai`, `gemini` ou `ollama` |
+| `CODE_SEARCH_LLM_MODEL` / `CODE_SEARCH_LLM_FAST_MODEL` | por provedor | modelo que responde / que valida |
+| `CODE_SEARCH_ALLOW_REMOTE` | `false` | autoriza provedores externos |
+| `CODE_SEARCH_OPENAI_MODEL`, `CODE_SEARCH_OPENAI_DIMENSIONS` | `text-embedding-3-small`, `0` | embedder OpenAI |
+| `CODE_SEARCH_GEMINI_MODEL`, `CODE_SEARCH_GEMINI_DIMENSIONS` | `gemini-embedding-001`, `0` | embedder Gemini |
+| `CODE_SEARCH_OPENAI_BASE_URL`, `CODE_SEARCH_GEMINI_BASE_URL`, `CODE_SEARCH_ANTHROPIC_BASE_URL` | APIs oficiais | endereços (aceita servidores compatíveis) |
+| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` | | chaves, só no ambiente |
+
+Ajustes internos em `application.yml`: `max-concurrent` (4 buscas simultâneas) e `timeout-seconds` (30 s por busca).
+
+## Armazenamento
+
+Tudo fica em `CODE_SEARCH_HOME`:
+
+```
+~/.workflows/code-search/
+├── repositories.json            repositórios registrados
+├── exclusion-policy.json        política de exclusão (extensões, pastas, tamanho, padrões de segredo)
+├── cache/                       embeddings já calculados (chave = conteúdo do método + perfil)
+└── index/
+    ├── active.json              ponteiro para a geração ativa
+    ├── previous.json            ponteiro para a anterior (usado pelo rollback)
+    ├── generations/<id>.json    perfil, schema e lista de segmentos
+    ├── segments/<id>/           um segmento imutável por repositório (vetores, BM25, chunks)
+    ├── tmp/                     staging; publicado por rename atômico
+    └── write.lock               trava dos escritores
+```
+
+Leitores não usam trava: leem `active.json` uma vez e trabalham sobre arquivos imutáveis. `rollback` troca os ponteiros e
+`prune` apaga o que nenhuma geração usa.
+
+## Segurança
+
+- **Só loopback**: o servidor recusa subir fora de `127.0.0.1`/`::1`, e o filtro de `Host` barra DNS rebinding. O POST exige
+  `Content-Type: application/json`, o que obriga preflight de CORS e impede páginas web de postar.
+- **Só arquivos commitados**: o Git é lido pela revisão, nunca pelo working tree.
+- **Segredos**: arquivos como `.env`, `*.pem` e `*.key` são excluídos, e métodos que casam padrões de segredo (chave AWS,
+  token do GitHub, JWT, senha atribuída) são descartados antes de embedar. Perguntas com segredo não vão para LLM externo.
+- **Egress explícito**: nada sai da máquina sem `--allow-remote`; cada provedor externo avisa em stderr o que envia.
+- **Erros sem vazamento**: mensagens nunca trazem caminho absoluto, stack trace, chave ou o código enviado.
+- **Prompt injection**: código e perguntas vão ao modelo entre marcadores, com instrução para tratá-los como dados.
+
+## Desenvolvimento
+
+```bash
+mvn -B verify      # testes unitários, de integração (HTTP, CLI, MCP), ArchUnit e paridade com o Python
+```
+
+- **Testes sem rede**: provedores externos são testados contra servidores falsos em loopback; o embedder dos testes é um
+  bag-of-words determinístico.
+- **Paridade com o Python** (`PythonParityTest`): `scripts/generate_golden.py` roda o código Python e grava
+  `src/test/resources/golden/golden.json` (chunks de 18 arquivos Java, tokenizador, RRF, política, ids e JSON canônico); o
+  teste exige resultado idêntico. Se o Python mudar: `python scripts/generate_golden.py <caminho>/code-search-embeddings/src`.
+  Diferença conhecida: o desempate por string usa unidades UTF-16 (só difere fora do plano básico).
+- **Gate de qualidade**: `eval/` tem o dataset de exemplo (108 consultas, UC1 conceito, UC2 identificador, UC3 código
+  parecido) e os limiares; veja `eval/README.md`.
+- **CI**: GitHub Actions em Linux e Windows (`.github/workflows/ci.yml`).
+
+## Estado e próximos passos
+
+Pronto e testado: indexação incremental, busca híbrida, armazenamento com gerações, HTTP, MCP, CLI, gate de avaliação,
+provedores externos opcionais e a pergunta (`ask`).
+
+Próximos passos:
+
+- Rodar o gate com um dataset real (2 ou 3 repositórios Java, cerca de 30 consultas por caso de uso) e o modelo
+  `qwen3-embedding:0.6b`, comparando com a versão Python.
+- Busca lexical: ignorar palavras comuns do português na consulta e tratar acentos.
+- Índice de referências (quem chama quem, onde um campo é usado) para perguntas sobre fluxo.
+- Desenhos de arquitetura como entrada do `ask` (draw.io, Mermaid, PlantUML, depois imagens).
