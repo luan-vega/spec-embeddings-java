@@ -40,8 +40,8 @@ flowchart LR
 
     SVC --> GIT[("Repositórios Git<br/>só arquivos commitados")]
     SVC --> IDX[("Índice em disco<br/>~/.workflows/code-search")]
-    SVC --> EMB["Embeddings<br/>Ollama local, OpenAI ou Gemini"]
-    SVC --> LLM["LLM do ask<br/>Claude, OpenAI, Gemini ou Ollama"]
+    SVC --> EMB["Embeddings<br/>Ollama local, OpenAI, Gemini ou Bedrock"]
+    SVC --> LLM["LLM do ask<br/>Claude, OpenAI, Gemini, Bedrock ou Ollama"]
 ```
 
 | O que você quer | Comando |
@@ -174,7 +174,7 @@ flowchart LR
     subgraph out["adapter.out (saída)"]
         direction TB
         O1["ollama<br/>OllamaEmbedder, OllamaChat"]
-        O2["remote<br/>OpenAI, Gemini, Claude"]
+        O2["remote<br/>OpenAI, Gemini, Claude, Bedrock"]
         O3["describer<br/>OllamaDescriber"]
         O4["file<br/>FileVectorStore, FileRepoRegistry,<br/>FileEmbeddingCache, FilePolicies"]
         O5["git<br/>GitSource"]
@@ -214,6 +214,7 @@ br.codesearch
 │   └── out
 │       ├── ollama               OllamaClient, OllamaEmbedder, OllamaChat
 │       ├── remote               OpenAiEmbedder, GeminiEmbedder, RemoteDescribers, RemoteChats, RemoteHttp
+│       ├── bedrock              BedrockConnection, BedrockEmbedder, BedrockChat, BedrockDescriber
 │       ├── describer            OllamaDescriber, DescriberPrompt
 │       ├── file                 FileVectorStore, FileRepoRegistry, FileEmbeddingCache, FilePolicies, ...
 │       ├── git                  GitSource
@@ -285,17 +286,31 @@ por comando ou variável de ambiente, sem mexer no código:
 
 | Papel | Opções | Escolha |
 |---|---|---|
-| embedder (consultas e documentos) | `ollama` (local), `openai`, `gemini` | `--embedder X` ou `CODE_SEARCH_EMBEDDER` |
-| describer (frase em inglês por método, na indexação) | `ollama` (local), `openai`, `claude`, `gemini` | `--describer X` ou `CODE_SEARCH_DESCRIBER` |
-| llm (pergunta: `ask`, `POST /v1/ask`, MCP `ask_code`) | `claude` (padrão), `openai`, `gemini`, `ollama` (local) | `--llm X` ou `CODE_SEARCH_LLM` |
+| embedder (consultas e documentos) | `ollama` (local), `openai`, `gemini`, `bedrock` | `--embedder X` ou `CODE_SEARCH_EMBEDDER` |
+| describer (frase em inglês por método, na indexação) | `ollama` (local), `openai`, `claude`, `gemini`, `bedrock` | `--describer X` ou `CODE_SEARCH_DESCRIBER` |
+| llm (pergunta: `ask`, `POST /v1/ask`, MCP `ask_code`) | `claude` (padrão), `openai`, `gemini`, `bedrock`, `ollama` (local) | `--llm X` ou `CODE_SEARCH_LLM` |
 
 - **Externo = o texto sai da máquina** (código dos métodos, consultas, perguntas). Só funciona com `--allow-remote` no comando
   (ou `CODE_SEARCH_ALLOW_REMOTE=1`), e um aviso em stderr diz o que vai e para onde.
-- **Chaves só por variável de ambiente**: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`. Nunca em arquivo de
-  configuração, log ou mensagem de erro. HTTPS é obrigatório (HTTP só em loopback, para servidores compatíveis locais).
+- **Chaves só por variável de ambiente**: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`. No Bedrock não há chave do
+  projeto: vale a cadeia padrão de credenciais da AWS (veja abaixo). Nunca em arquivo de configuração, log ou mensagem de erro. HTTPS é obrigatório (HTTP só em loopback, para servidores compatíveis locais).
 - A Anthropic não tem API de embeddings: a Claude descreve métodos e responde perguntas, mas não gera embeddings.
 - Trocar de embedder ou de describer muda o perfil do índice: use um `CODE_SEARCH_HOME` separado para cada combinação ou
   reindexe.
+- **AWS Bedrock** (`bedrock` nos três papéis): usa o AWS SDK for Java v2 e a cadeia padrão de credenciais da AWS
+  (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_SESSION_TOKEN`, `AWS_PROFILE`/SSO ou role do ambiente), nada é guardado
+  pelo projeto. Região em `CODE_SEARCH_BEDROCK_REGION` ou `AWS_REGION`; `CODE_SEARCH_BEDROCK_ENDPOINT` troca o endereço
+  (VPC endpoint). O `llm` e o `describer` usam a Converse API (Claude, Nova, Llama, Mistral...) e **exigem o id do modelo** em
+  `CODE_SEARCH_LLM_MODEL` / `CODE_SEARCH_DESCRIBER_MODEL` (por exemplo um perfil de inferência `us.anthropic.claude-...`
+  liberado na sua conta). O embedder aceita `amazon.titan-embed-text-v2:0` e `cohere.embed-*` (padrão
+  `cohere.embed-multilingual-v3`, em `CODE_SEARCH_BEDROCK_MODEL`; dimensão opcional em `CODE_SEARCH_BEDROCK_DIMENSIONS`).
+  A conta precisa ter acesso ao modelo (`bedrock:InvokeModel`), e o Titan faz uma chamada por texto, então indexar é mais lento
+  que com o Cohere (96 textos por chamada).
+  ```
+  export AWS_REGION=us-east-1   # mais as credenciais da AWS no ambiente
+  code-search index meu-repo --embedder bedrock --allow-remote
+  code-search ask "onde é calculado o frete?" --llm bedrock --allow-remote   # com CODE_SEARCH_LLM_MODEL definido
+  ```
 - `code-search providers [--json]` mostra o que está configurado e o que falta em cada provedor, sem chamar nenhum e sem
   mostrar chaves.
 
@@ -406,18 +421,19 @@ Os nomes são os mesmos da versão Python. Opções de linha de comando têm pre
 | Variável | Padrão | Para quê |
 |---|---|---|
 | `CODE_SEARCH_HOME` | `~/.workflows/code-search` | onde ficam registro, política, cache e índice |
-| `CODE_SEARCH_EMBEDDER` | `ollama` | `ollama`, `openai` ou `gemini` |
+| `CODE_SEARCH_EMBEDDER` | `ollama` | `ollama`, `openai`, `gemini` ou `bedrock` |
 | `CODE_SEARCH_OLLAMA_URL` | `http://127.0.0.1:11434` | só loopback |
 | `CODE_SEARCH_OLLAMA_MODEL` | (obrigatório com Ollama) | modelo de embedding instalado |
 | `CODE_SEARCH_DOC_PREFIX` / `CODE_SEARCH_QUERY_PREFIX` | vazio | prefixos que alguns modelos pedem para documento e consulta |
 | `CODE_SEARCH_DESCRIBER` / `CODE_SEARCH_DESCRIBER_MODEL` | vazio | descrição opcional dos métodos na indexação |
-| `CODE_SEARCH_LLM` | `claude` | modelo do `ask`: `claude`, `openai`, `gemini` ou `ollama` |
+| `CODE_SEARCH_LLM` | `claude` | modelo do `ask`: `claude`, `openai`, `gemini`, `bedrock` ou `ollama` |
 | `CODE_SEARCH_LLM_MODEL` / `CODE_SEARCH_LLM_FAST_MODEL` | por provedor | modelo que responde / que valida |
 | `CODE_SEARCH_ALLOW_REMOTE` | `false` | autoriza provedores externos |
 | `CODE_SEARCH_OPENAI_MODEL`, `CODE_SEARCH_OPENAI_DIMENSIONS` | `text-embedding-3-small`, `0` | embedder OpenAI |
 | `CODE_SEARCH_GEMINI_MODEL`, `CODE_SEARCH_GEMINI_DIMENSIONS` | `gemini-embedding-001`, `0` | embedder Gemini |
 | `CODE_SEARCH_OPENAI_BASE_URL`, `CODE_SEARCH_GEMINI_BASE_URL`, `CODE_SEARCH_ANTHROPIC_BASE_URL` | APIs oficiais | endereços (aceita servidores compatíveis) |
-| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` | | chaves, só no ambiente |
+| `CODE_SEARCH_BEDROCK_REGION`, `CODE_SEARCH_BEDROCK_ENDPOINT`, `CODE_SEARCH_BEDROCK_MODEL`, `CODE_SEARCH_BEDROCK_DIMENSIONS` | `AWS_REGION`, vazio, `cohere.embed-multilingual-v3`, `0` | AWS Bedrock |
+| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, credenciais AWS | | chaves, só no ambiente |
 
 Ajustes internos em `application.yml`: `max-concurrent` (4 buscas simultâneas) e `timeout-seconds` (30 s por busca).
 

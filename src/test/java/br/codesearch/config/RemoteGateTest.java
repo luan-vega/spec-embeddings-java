@@ -43,11 +43,11 @@ class RemoteGateTest {
     }
 
     static CodeSearchProperties props(String embedder, String describer, boolean allowRemote, String base) {
-        return new CodeSearchProperties("", embedder, "", "", "", "", 0, 0, allowRemote, describer, "", base, "", 0, base, base, "", 0, "", "", "");
+        return new CodeSearchProperties("", embedder, "", "", "", "", 0, 0, allowRemote, describer, "", base, "", 0, base, base, "", 0, "", "", "", "", "", "", 0);
     }
 
     static CodeSearchProperties llmProps(String llm, boolean allowRemote, String base) {
-        return new CodeSearchProperties("", "ollama", "", "", "", "", 0, 0, allowRemote, "", "", base, "", 0, base, base, "", 0, llm, "", "");
+        return new CodeSearchProperties("", "ollama", "", "", "", "", 0, 0, allowRemote, "", "", base, "", 0, base, base, "", 0, llm, "", "", "", "", "", 0);
     }
 
     @Test
@@ -61,7 +61,7 @@ class RemoteGateTest {
                     });
         }
         assertThatThrownBy(() -> new CodeSearchConfig().languageModel(llmProps("cohere", true, ""), true, "", "", ""))
-                .hasMessageContaining("available: claude, openai, gemini, ollama");
+                .hasMessageContaining("available: claude, openai, gemini, bedrock, ollama");
 
         String base = fake();
         PrintStream oldErr = System.err;
@@ -141,5 +141,16 @@ class RemoteGateTest {
         String notice = err.toString(StandardCharsets.UTF_8);
         assertThat(notice).contains("embedder 'openai' é EXTERNO").contains("describer 'claude' é EXTERNO").contains("embedder 'gemini' é EXTERNO").contains("127.0.0.1");
         assertThat(notice).doesNotContain("sk-x").doesNotContain("sk-ant").doesNotContain("gk");
+    }
+
+    @Test
+    void bedrockNeedsPermissionLikeTheOtherExternalProviders() {
+        var props = new CodeSearchProperties("", "bedrock", "", "", "", "", 0, 0, false, "bedrock", "m", "", "", 0, "", "", "", 0,
+                "bedrock", "m", "", "us-east-1", "http://127.0.0.1:1", "", 0);
+        assertThatThrownBy(() -> new CodeSearchConfig().embedder(props, "", ""))
+                .isInstanceOfSatisfying(CodeSearchException.class, e -> assertThat(e.getMessage()).contains("--allow-remote"));
+        assertThatThrownBy(() -> new CodeSearchConfig().languageModel(props, true, "", "", ""))
+                .isInstanceOfSatisfying(CodeSearchException.class, e -> assertThat(e.getMessage()).contains("--allow-remote"));
+        assertThat(props.bedrockModel()).isEqualTo("cohere.embed-multilingual-v3");
     }
 }

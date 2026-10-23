@@ -62,9 +62,9 @@ public final class CliCommands {
                                                       gate de avaliação (UC1/UC2/UC3); sai com 1 se reprovar
 
             provedor, em qualquer comando (padrão: local, pelo ambiente):
-              --embedder ollama|openai|gemini         openai e gemini são EXTERNOS: trechos e consultas saem da máquina
-              --describer ollama|openai|claude|gemini descreve métodos em inglês antes de indexar; os demais são EXTERNOS
-              --llm claude|openai|gemini|ollama       modelo do ask (padrão claude); os três primeiros são EXTERNOS
+              --embedder ollama|openai|gemini|bedrock openai, gemini e bedrock são EXTERNOS: trechos e consultas saem da máquina
+              --describer ollama|openai|claude|gemini|bedrock descreve métodos em inglês antes de indexar; os demais são EXTERNOS
+              --llm claude|openai|gemini|bedrock|ollama modelo do ask (padrão claude); só o ollama é local
               --allow-remote                          autoriza provedor externo só neste comando
             """;
 

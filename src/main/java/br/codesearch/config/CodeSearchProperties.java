@@ -5,10 +5,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Configuração em {@code code-search.*}; os nomes de ambiente são os mesmos da versão Python (CODE_SEARCH_*), mapeados em
  * application.yml. {@code home} vazio significa {@code ~/.workflows/code-search}. As chaves de API (OPENAI_API_KEY,
- * ANTHROPIC_API_KEY, GEMINI_API_KEY) não ficam aqui: são lidas só no momento de criar o adapter, para nunca aparecerem em toString ou logs.
+ * ANTHROPIC_API_KEY, GEMINI_API_KEY e a cadeia de credenciais da AWS para o bedrock) não ficam aqui: são lidas só no momento de criar o adapter, para nunca aparecerem em toString ou logs.
  *
- * <p>{@code embedder}: ollama (local), openai ou gemini (EXTERNOS). {@code describer}: vazio (sem descrição), ollama (local), openai,
- * claude ou gemini (EXTERNOS). {@code llm} (pergunta, comando ask): claude (padrão), openai, gemini (EXTERNOS) ou ollama;
+ * <p>{@code embedder}: ollama (local), openai, gemini ou bedrock (EXTERNOS). {@code describer}: vazio (sem descrição), ollama (local), openai,
+ * claude, gemini ou bedrock (EXTERNOS). {@code llm} (pergunta, comando ask): claude (padrão), openai, gemini, bedrock (EXTERNOS) ou ollama;
  * {@code llmFastModel} valida e reescreve a pergunta, {@code llmModel} responde. Os externos só funcionam com {@code allowRemote}.
  */
 @ConfigurationProperties("code-search")
@@ -16,7 +16,8 @@ public record CodeSearchProperties(
         String home, String embedder, String ollamaUrl, String ollamaModel, String docPrefix, String queryPrefix,
         int maxConcurrent, int timeoutSeconds, boolean allowRemote, String describer, String describerModel,
         String openaiBaseUrl, String openaiModel, int openaiDimensions, String anthropicBaseUrl,
-        String geminiBaseUrl, String geminiModel, int geminiDimensions, String llm, String llmModel, String llmFastModel) {
+        String geminiBaseUrl, String geminiModel, int geminiDimensions, String llm, String llmModel, String llmFastModel,
+        String bedrockRegion, String bedrockEndpoint, String bedrockModel, int bedrockDimensions) {
 
     public CodeSearchProperties {
         embedder = embedder == null || embedder.isBlank() ? "ollama" : embedder;
@@ -36,6 +37,9 @@ public record CodeSearchProperties(
         llm = llm == null || llm.isBlank() ? "claude" : llm.strip();
         llmModel = llmModel == null ? "" : llmModel.strip();
         llmFastModel = llmFastModel == null ? "" : llmFastModel.strip();
+        bedrockRegion = bedrockRegion == null ? "" : bedrockRegion.strip();
+        bedrockEndpoint = bedrockEndpoint == null ? "" : bedrockEndpoint.strip();
+        bedrockModel = bedrockModel == null || bedrockModel.isBlank() ? "cohere.embed-multilingual-v3" : bedrockModel.strip();
         anthropicBaseUrl = anthropicBaseUrl == null || anthropicBaseUrl.isBlank() ? "https://api.anthropic.com" : anthropicBaseUrl;
     }
 }

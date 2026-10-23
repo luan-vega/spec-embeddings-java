@@ -5,6 +5,10 @@ import br.codesearch.adapter.out.file.FilePolicies;
 import br.codesearch.adapter.out.file.FileRepoRegistry;
 import br.codesearch.adapter.out.file.FileVectorStore;
 import br.codesearch.adapter.out.git.GitSource;
+import br.codesearch.adapter.out.bedrock.BedrockChat;
+import br.codesearch.adapter.out.bedrock.BedrockConnection;
+import br.codesearch.adapter.out.bedrock.BedrockDescriber;
+import br.codesearch.adapter.out.bedrock.BedrockEmbedder;
 import br.codesearch.adapter.out.describer.OllamaDescriber;
 import br.codesearch.adapter.out.ollama.OllamaChat;
 import br.codesearch.adapter.out.ollama.OllamaClient;
@@ -76,6 +80,10 @@ class CodeSearchConfig {
         return new BoundedRunner(props.maxConcurrent(), props.timeoutSeconds() * 1000L, 1);
     }
 
+    private static BedrockConnection bedrock(CodeSearchProperties props, String errorCode) {
+        return BedrockConnection.create(props.bedrockRegion(), props.bedrockEndpoint(), errorCode);
+    }
+
     @Bean
     @Lazy
     Embedder embedder(CodeSearchProperties props, @Value("${OPENAI_API_KEY:}") String openaiKey,
@@ -99,8 +107,15 @@ class CodeSearchConfig {
                 RemoteGate.announce(System.err, "embedder", "gemini", embedder.host(), "trechos de código e consultas");
                 return embedder;
             }
+            case "bedrock" -> {
+                RemoteGate.require(props.allowRemote(), "embedder", "bedrock", "embedder_unavailable");
+                var connection = bedrock(props, "embedder_unavailable");
+                var embedder = new BedrockEmbedder(connection, props.bedrockModel(), props.bedrockDimensions());
+                RemoteGate.announce(System.err, "embedder", "bedrock", embedder.host(), "trechos de código e consultas");
+                return embedder;
+            }
             default -> throw new CodeSearchException("embedder_unavailable",
-                    "unknown embedder '" + props.embedder() + "'; available: ollama, openai, gemini");
+                    "unknown embedder '" + props.embedder() + "'; available: ollama, openai, gemini, bedrock");
         }
     }
 
@@ -132,8 +147,14 @@ class CodeSearchConfig {
                 RemoteGate.announce(System.err, "describer", "gemini", d.host(), "o código dos métodos");
                 yield d;
             }
+            case "bedrock" -> {
+                RemoteGate.require(props.allowRemote(), "describer", "bedrock", "describer_unavailable");
+                var d = new BedrockDescriber(bedrock(props, "describer_unavailable"), props.describerModel());
+                RemoteGate.announce(System.err, "describer", "bedrock", d.host(), "o código dos métodos");
+                yield d;
+            }
             default -> throw new CodeSearchException("describer_unavailable",
-                    "unknown describer '" + props.describer() + "'; available: ollama, openai, claude, gemini");
+                    "unknown describer '" + props.describer() + "'; available: ollama, openai, claude, gemini, bedrock");
         });
     }
 
@@ -178,11 +199,17 @@ class CodeSearchConfig {
                 RemoteGate.announce(System.err, role, "gemini", m.host(), sends);
                 return m;
             }
+            case "bedrock" -> {
+                RemoteGate.require(props.allowRemote(), "llm", "bedrock", "llm_unavailable");
+                var m = new BedrockChat(bedrock(props, "llm_unavailable"), chosen);
+                RemoteGate.announce(System.err, role, "bedrock", m.host(), sends);
+                return m;
+            }
             case "ollama" -> {
                 return new OllamaChat(chosen, new OllamaClient(props.ollamaUrl(), Duration.ofSeconds(120)));
             }
             default -> throw new CodeSearchException("llm_unavailable",
-                    "unknown llm '" + props.llm() + "'; available: claude, openai, gemini, ollama");
+                    "unknown llm '" + props.llm() + "'; available: claude, openai, gemini, bedrock, ollama");
         }
     }
 
