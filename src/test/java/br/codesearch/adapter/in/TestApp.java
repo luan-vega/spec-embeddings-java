@@ -8,11 +8,13 @@ import br.codesearch.adapter.out.file.FileVectorStore;
 import br.codesearch.adapter.out.git.GitSource;
 import br.codesearch.adapter.out.sparse.JavaSparseEncoder;
 import br.codesearch.adapter.AdaptersTest;
+import br.codesearch.application.AskService;
 import br.codesearch.application.BoundedRunner;
 import br.codesearch.application.IndexService;
 import br.codesearch.application.SearchService;
 import br.codesearch.application.StatusService;
 import br.codesearch.application.fakes.BagOfWordsEmbedder;
+import br.codesearch.application.fakes.ScriptedLanguageModel;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -27,6 +29,8 @@ public final class TestApp {
     private final Path home;
     public final BagOfWordsEmbedder embedder = new BagOfWordsEmbedder();
     public final BoundedRunner runner = new BoundedRunner(2, 5000, 1);
+    public final ScriptedLanguageModel validator = new ScriptedLanguageModel("fake:fast", false);
+    public final ScriptedLanguageModel answerer = new ScriptedLanguageModel("fake:strong", false);
 
     public TestApp(Path home) {
         this.home = home;
@@ -51,7 +55,9 @@ public final class TestApp {
         IndexService indexer = new IndexService(store, registry, embedder, sparse, policies.load(),
                 new FileEmbeddingCache(home.resolve("cache"), embedder.profile()),
                 entry -> new GitSource(Path.of(entry.path()), entry.ref()), null);
-        return new CliCommands(registry, policies, store, status, runner, () -> embedder, () -> indexer, () -> search, providers);
+        AskService ask = new AskService(search, validator, answerer, policies.load());
+        return new CliCommands(registry, policies, store, status, runner, () -> embedder, () -> indexer, () -> search, providers,
+                () -> ask);
     }
 
     /** Repositório Git com uma classe de pagamento e outra de cliente. */

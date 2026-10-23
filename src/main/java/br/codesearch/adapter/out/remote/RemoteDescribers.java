@@ -97,8 +97,7 @@ public final class RemoteDescribers {
         String send(String prompt) {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("model", model);
-            body.put("max_tokens", DescriberPrompt.MAX_OUTPUT_TOKENS);
-            body.put("temperature", 0);
+            body.put("max_tokens", DescriberPrompt.MAX_OUTPUT_TOKENS); // sem temperature: a API recusa amostragem (400)
             body.put("messages", List.of(Map.of("role", "user", "content", prompt)));
             RemoteHttp.Response resp = http.post("v1/messages", body);
             if (resp.status() != 200 || resp.body() == null) {

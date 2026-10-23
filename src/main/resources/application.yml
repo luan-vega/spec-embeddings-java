@@ -22,6 +22,9 @@ code-search:
   allow-remote: ${CODE_SEARCH_ALLOW_REMOTE:false}
   describer: ${CODE_SEARCH_DESCRIBER:}                 # vazio, ollama, openai, claude ou gemini
   describer-model: ${CODE_SEARCH_DESCRIBER_MODEL:}
+  llm: ${CODE_SEARCH_LLM:claude}                       # pergunta (ask): claude, openai, gemini ou ollama
+  llm-model: ${CODE_SEARCH_LLM_MODEL:}                 # responde; padrão claude-opus-5-5 (claude), gemini-2.5-flash (gemini)
+  llm-fast-model: ${CODE_SEARCH_LLM_FAST_MODEL:}       # valida e reescreve; padrão claude-haiku-5-5 (claude), o mesmo do llm-model nos outros
   openai-base-url: ${CODE_SEARCH_OPENAI_BASE_URL:https://api.openai.com/v1}
   openai-model: ${CODE_SEARCH_OPENAI_MODEL:text-embedding-3-small}
   openai-dimensions: ${CODE_SEARCH_OPENAI_DIMENSIONS:0}

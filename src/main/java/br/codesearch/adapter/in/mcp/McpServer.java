@@ -1,6 +1,7 @@
 package br.codesearch.adapter.in.mcp;
 
 import br.codesearch.adapter.in.Payloads;
+import br.codesearch.application.AskService;
 import br.codesearch.application.BoundedRunner;
 import br.codesearch.application.SearchResponse;
 import br.codesearch.application.SearchService;
@@ -29,12 +30,19 @@ public final class McpServer {
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private final Supplier<SearchService> search;
+    private final Supplier<AskService> ask;
     private final StatusService status;
     private final BoundedRunner runner;
 
     /** {@code search} pode falhar com embedder_unavailable; o erro volta como resultado da ferramenta. */
     public McpServer(Supplier<SearchService> search, StatusService status, BoundedRunner runner) {
+        this(search, null, status, runner);
+    }
+
+    /** {@code ask} nulo: sem a ferramenta ask_code. */
+    public McpServer(Supplier<SearchService> search, Supplier<AskService> ask, StatusService status, BoundedRunner runner) {
         this.search = search;
+        this.ask = ask;
         this.status = status;
         this.runner = runner;
     }
@@ -55,7 +63,7 @@ public final class McpServer {
         return t;
     }
 
-    private static List<Map<String, Object>> tools() {
+    private List<Map<String, Object>> tools() {
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("query", Map.of("type", "string"));
         props.put("mode", Map.of("type", "string", "enum", List.of("hybrid", "semantic", "lexical")));
@@ -63,9 +71,21 @@ public final class McpServer {
         props.put("languages", Map.of("type", "array", "items", Map.of("type", "string")));
         props.put("path_prefix", Map.of("type", "string"));
         props.put("top_k", Map.of("type", "integer", "minimum", 1));
-        return List.of(
+        List<Map<String, Object>> out = new java.util.ArrayList<>(List.of(
                 tool("search_code", "Busca código Java nos repositórios indexados (híbrida, semântica ou lexical). Somente leitura.", props, List.of("query")),
-                tool("code_search_status", "Estado do índice ativo e dos repositórios (revisão, data de indexação). Somente leitura.", Map.of(), List.of()));
+                tool("code_search_status", "Estado do índice ativo e dos repositórios (revisão, data de indexação). Somente leitura.", Map.of(), List.of())));
+        if (ask != null) {
+            Map<String, Object> askProps = new LinkedHashMap<>();
+            askProps.put("question", Map.of("type", "string"));
+            askProps.put("repos", Map.of("type", "array", "items", Map.of("type", "string")));
+            askProps.put("languages", Map.of("type", "array", "items", Map.of("type", "string")));
+            askProps.put("path_prefix", Map.of("type", "string"));
+            askProps.put("top_k", Map.of("type", "integer", "minimum", 1, "maximum", AskService.MAX_TOP_K));
+            out.add(tool("ask_code", "Pergunta sobre o código em linguagem natural: valida a pergunta (ou pede esclarecimento), "
+                    + "busca e responde citando os trechos [n]. Usa um modelo de linguagem, que pode ser externo. Somente leitura.",
+                    askProps, List.of("question")));
+        }
+        return out;
     }
 
     private static Map<String, Object> result(JsonNode id, Object result) {
@@ -142,6 +162,10 @@ public final class McpServer {
                     item.put("text", text.length() > MAX_TEXT_CHARS ? text.substring(0, MAX_TEXT_CHARS) : text);
                 }
                 return toolText(payload, false);
+            }
+            if (name.equals("ask_code") && ask != null) {
+                AskService.Ask question = Payloads.parseAsk(args, null);
+                return toolText(Payloads.askResponse(ask.get().ask(question)), false);
             }
             if (name.equals("code_search_status")) {
                 return toolText(status.status(), false);

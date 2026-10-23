@@ -2,6 +2,8 @@ package br.codesearch.adapter.in.web;
 
 import br.codesearch.adapter.in.Payloads;
 import br.codesearch.adapter.in.StructuredLog;
+import br.codesearch.application.AskResponse;
+import br.codesearch.application.AskService;
 import br.codesearch.application.BoundedRunner;
 import br.codesearch.application.SearchResponse;
 import br.codesearch.application.SearchService;
@@ -32,13 +34,32 @@ class HttpApi {
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private final ObjectProvider<SearchService> search;
+    private final ObjectProvider<AskService> ask;
     private final StatusService status;
     private final BoundedRunner runner;
 
-    HttpApi(ObjectProvider<SearchService> search, StatusService status, BoundedRunner runner) {
+    HttpApi(ObjectProvider<SearchService> search, ObjectProvider<AskService> ask, StatusService status, BoundedRunner runner) {
         this.search = search;
+        this.ask = ask;
         this.status = status;
         this.runner = runner;
+    }
+
+    /** Corpo JSON de até 64 KB, só com Content-Type application/json (exige preflight de CORS). */
+    private static JsonNode readJson(HttpServletRequest request) throws IOException {
+        String type = request.getContentType() == null ? "" : request.getContentType().split(";")[0].strip().toLowerCase();
+        if (!type.equals("application/json")) {
+            throw new CodeSearchException("invalid_request", "Content-Type must be application/json");
+        }
+        byte[] raw = request.getInputStream().readNBytes(MAX_BODY_BYTES + 1);
+        if (raw.length > MAX_BODY_BYTES) {
+            throw new CodeSearchException("payload_too_large", "request body is too large");
+        }
+        try {
+            return JSON.readTree(raw);
+        } catch (JacksonException e) {
+            throw new CodeSearchException("invalid_request", "body is not valid JSON");
+        }
     }
 
     private static ResponseEntity<byte[]> json(int status, Object payload, Map<String, String> headers) {
@@ -75,21 +96,7 @@ class HttpApi {
         long started = System.nanoTime();
         Map<String, Object> log = new LinkedHashMap<>();
         try {
-            String type = request.getContentType() == null ? "" : request.getContentType().split(";")[0].strip().toLowerCase();
-            if (!type.equals("application/json")) { // exige preflight de CORS: páginas web não conseguem postar aqui
-                throw new CodeSearchException("invalid_request", "Content-Type must be application/json");
-            }
-            byte[] raw = request.getInputStream().readNBytes(MAX_BODY_BYTES + 1);
-            if (raw.length > MAX_BODY_BYTES) {
-                throw new CodeSearchException("payload_too_large", "request body is too large");
-            }
-            JsonNode body;
-            try {
-                body = JSON.readTree(raw);
-            } catch (JacksonException e) {
-                throw new CodeSearchException("invalid_request", "body is not valid JSON");
-            }
-            SearchService.Query query = Payloads.parseSearch(body, requestId);
+            SearchService.Query query = Payloads.parseSearch(readJson(request), requestId);
             log.put("mode", query.mode());
             SearchService service = CodeSearchException.resolve(search::getIfAvailable);
             if (service == null) {
@@ -113,6 +120,38 @@ class HttpApi {
             log.put("request_id", requestId);
             log.put("duration_ms", (System.nanoTime() - started) / 1e6);
             StructuredLog.event(System.err, "search", log);
+        }
+    }
+
+    /** Pergunta em linguagem natural. Fora do executor de busca: as chamadas ao modelo têm o próprio limite de tempo. */
+    @PostMapping("/v1/ask")
+    ResponseEntity<byte[]> ask(HttpServletRequest request) {
+        String requestId = UUID.randomUUID().toString().replace("-", "");
+        long started = System.nanoTime();
+        Map<String, Object> log = new LinkedHashMap<>();
+        try {
+            AskService.Ask question = Payloads.parseAsk(readJson(request), requestId);
+            AskService service = CodeSearchException.resolve(ask::getIfAvailable);
+            if (service == null) {
+                throw new CodeSearchException("llm_unavailable", "ask is not available");
+            }
+            AskResponse response = service.ask(question);
+            log.put("status", response.status());
+            log.put("sources", response.sources().size());
+            log.put("warnings", response.warnings().size());
+            return json(200, Payloads.askResponse(response), Map.of());
+        } catch (CodeSearchException e) {
+            log.put("status", "error");
+            log.put("code", e.code());
+            return error(e, requestId);
+        } catch (IOException | RuntimeException e) {
+            log.put("status", "error");
+            log.put("code", "internal_error");
+            return error(new CodeSearchException("internal_error", "internal error"), requestId);
+        } finally {
+            log.put("request_id", requestId);
+            log.put("duration_ms", (System.nanoTime() - started) / 1e6);
+            StructuredLog.event(System.err, "ask", log);
         }
     }
 }

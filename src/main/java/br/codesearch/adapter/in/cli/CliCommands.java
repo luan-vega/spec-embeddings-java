@@ -2,6 +2,8 @@ package br.codesearch.adapter.in.cli;
 
 import br.codesearch.adapter.in.Payloads;
 import br.codesearch.adapter.in.mcp.McpServer;
+import br.codesearch.application.AskResponse;
+import br.codesearch.application.AskService;
 import br.codesearch.application.BoundedRunner;
 import br.codesearch.application.Evaluation;
 import br.codesearch.application.IndexReport;
@@ -49,6 +51,8 @@ public final class CliCommands {
               index [--repo ID]... [--force]          reindexa os repositórios habilitados
               search <consulta> [--mode hybrid|semantic|lexical] [--repo ID]... [--language L]...
                      [--path-prefix P] [--top-k N] [--json]
+              ask <pergunta> [--repo ID]... [--language L]... [--path-prefix P] [--top-k N] [--json]
+                                                      valida a pergunta, busca e responde citando os trechos
               status [--json]                         estado do índice e dos repositórios
               rollback                                volta para a geração anterior
               prune [--tmp-max-age SEGUNDOS]          apaga gerações e segmentos sem referência
@@ -60,16 +64,18 @@ public final class CliCommands {
             provedor, em qualquer comando (padrão: local, pelo ambiente):
               --embedder ollama|openai|gemini         openai e gemini são EXTERNOS: trechos e consultas saem da máquina
               --describer ollama|openai|claude|gemini descreve métodos em inglês antes de indexar; os demais são EXTERNOS
+              --llm claude|openai|gemini|ollama       modelo do ask (padrão claude); os três primeiros são EXTERNOS
               --allow-remote                          autoriza provedor externo só neste comando
             """;
 
     private static final JsonMapper JSON = JsonMapper.builder().build();
     private static final Map<String, Set<String>> FLAGS = Map.of(
             "policy", Set.of("--force"), "index", Set.of("--force"), "search", Set.of("--json"), "status", Set.of("--json"),
-            "providers", Set.of("--json"));
+            "providers", Set.of("--json"), "ask", Set.of("--json"));
     private static final Map<String, Set<String>> OPTIONS = Map.of(
             "repo", Set.of("--root"), "index", Set.of("--repo"),
             "search", Set.of("--mode", "--repo", "--language", "--path-prefix", "--top-k"), "prune", Set.of("--tmp-max-age"),
+            "ask", Set.of("--repo", "--language", "--path-prefix", "--top-k"),
             "eval", Set.of("--dataset", "--thresholds", "--repo", "--out"));
 
     private final RepoCatalog registry;
@@ -82,17 +88,27 @@ public final class CliCommands {
     private final Supplier<SearchService> search;
 
     private final ProviderCatalog providers;
+    private final Supplier<AskService> ask;
 
     public CliCommands(
             RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
             Supplier<Embedder> embedder, Supplier<IndexService> indexer, Supplier<SearchService> search) {
-        this(registry, policies, store, status, runner, embedder, indexer, search, null);
+        this(registry, policies, store, status, runner, embedder, indexer, search, null, null);
     }
 
     public CliCommands(
             RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
             Supplier<Embedder> embedder, Supplier<IndexService> indexer, Supplier<SearchService> search,
             ProviderCatalog providers) {
+        this(registry, policies, store, status, runner, embedder, indexer, search, providers, null);
+    }
+
+    /** {@code ask} nulo: sem o comando ask e sem a ferramenta MCP ask_code. */
+    public CliCommands(
+            RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
+            Supplier<Embedder> embedder, Supplier<IndexService> indexer, Supplier<SearchService> search,
+            ProviderCatalog providers, Supplier<AskService> ask) {
+        this.ask = ask;
         this.providers = providers;
         this.registry = registry;
         this.policies = policies;
@@ -192,6 +208,9 @@ public final class CliCommands {
             case "search" -> {
                 return search(p, out);
             }
+            case "ask" -> {
+                return ask(p, out);
+            }
             case "status" -> {
                 Map<String, Object> s = status.status();
                 if (p.flags().contains("--json")) {
@@ -218,7 +237,7 @@ public final class CliCommands {
                 return 0;
             }
             case "mcp" -> {
-                new McpServer(search, status, runner).serve(in, out);
+                new McpServer(search, ask, status, runner).serve(in, out);
                 return 0;
             }
             case "eval" -> {
@@ -315,7 +334,7 @@ public final class CliCommands {
             out.printf("%-9s %-7s %-7s %s %-28s %s%n", i.role(), i.name(), i.external() ? "EXTERNO" : "local",
                     i.selected() ? "*" : " ", state, i.model().isBlank() ? "-" : i.model());
         }
-        out.println("* = em uso. Troque com --embedder/--describer ou CODE_SEARCH_EMBEDDER/CODE_SEARCH_DESCRIBER.");
+        out.println("* = em uso. Troque com --embedder/--describer/--llm ou CODE_SEARCH_EMBEDDER/CODE_SEARCH_DESCRIBER/CODE_SEARCH_LLM.");
         return 0;
     }
 
@@ -387,6 +406,52 @@ public final class CliCommands {
                     c.endLine(), c.symbol(), r.score(), rev, c.indexedAt());
         }
         return 0;
+    }
+
+    private int ask(Parsed p, PrintStream out) {
+        expect(p, 1, "ask <pergunta>");
+        if (ask == null) {
+            throw new CodeSearchException("llm_unavailable", "ask is not available");
+        }
+        int topK;
+        try {
+            topK = Integer.parseInt(p.one("--top-k", "8"));
+        } catch (NumberFormatException e) {
+            throw new CodeSearchException("invalid_request", "top_k out of range");
+        }
+        AskService.Ask question = new AskService.Ask(p.positional().get(0), p.all("--repo"), p.all("--language"),
+                p.one("--path-prefix", null), topK, null);
+        AskResponse r = ask.get().ask(question);
+        if (p.flags().contains("--json")) {
+            out.println(JSON.writerWithDefaultPrettyPrinter().writeValueAsString(Payloads.askResponse(r)));
+            return r.status().equals("answered") ? 0 : 1;
+        }
+        switch (r.status()) {
+            case "needs_clarification" -> {
+                out.println("preciso de mais informação para buscar:");
+                r.questions().forEach(q -> out.println("  - " + q));
+            }
+            case "no_results" -> out.println("nenhum trecho encontrado para: " + String.join(" | ", r.plan().queries()));
+            default -> {
+                if (r.status().equals("not_found")) {
+                    out.println("os trechos encontrados não respondem a pergunta.");
+                }
+                out.println(r.answer());
+                out.println();
+                out.println("trechos:");
+                for (AskResponse.Source s : r.sources()) {
+                    var c = s.chunk();
+                    out.printf("  [%d]%s %s:%s:%d-%d  %s%n", s.n(), s.cited() ? "*" : " ", c.repo(), c.source(), c.startLine(),
+                            c.endLine(), c.symbol());
+                }
+            }
+        }
+        for (String w : r.warnings()) {
+            out.println("aviso: " + w);
+        }
+        out.println("modelos: " + r.models().validator() + " (validação), " + r.models().answerer() + " (resposta) · ms "
+                + r.timingsMs());
+        return r.status().equals("answered") ? 0 : 1;
     }
 
     @SuppressWarnings("unchecked")

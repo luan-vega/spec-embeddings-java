@@ -116,7 +116,8 @@ class CliAndMcpTest {
 
         assertThat(replies.get(0).get("result").get("protocolVersion").asString()).isEqualTo("2024-11-05");
         JsonNode tools = replies.get(1).get("result").get("tools");
-        assertThat(tools).hasSize(2);
+        assertThat(tools).hasSize(3);
+        assertThat(tools.get(2).get("name").asString()).isEqualTo("ask_code");
         for (JsonNode tool : tools) {
             assertThat(tool.get("annotations").get("readOnlyHint").asBoolean()).isTrue();
         }
@@ -129,5 +130,41 @@ class CliAndMcpTest {
         assertThat(replies.get(5).get("result").get("isError").asBoolean()).as("campo desconhecido").isTrue();
         assertThat(replies.get(6).get("error").get("code").asInt()).isEqualTo(-32601);
         assertThat(replies.get(7).get("error").get("code").asInt()).isEqualTo(-32700);
+    }
+
+    @Test
+    void askAnswersOrAsksForClarificationOnTheCommandLineAndOverMcp() throws Exception {
+        TestApp app = app();
+        app.run("policy", "init");
+        app.run("repo", "add", "pagamento", tmp.resolve("repo").toString());
+        app.run("index");
+
+        app.validator.reply("STATUS: ok\nINTENT: locate\nIDENTIFIERS: estornarPagamento\nSEARCH: refund a payment");
+        app.answerer.reply("O estorno fica em `Pagamento.estornarPagamento` [1].");
+        TestApp.Result text = app.run("ask", "onde fica o estorno?");
+        assertThat(text.code()).isZero();
+        assertThat(text.out()).contains("O estorno fica em").contains("[1]* pagamento:src/main/java/br/Pagamento.java")
+                .contains("fake:fast (validação), fake:strong (resposta)");
+
+        app.validator.reply("STATUS: clarify\nQUESTION: Qual variável?");
+        TestApp.Result clarify = app.run("ask", "como mapear esta variável?", "--json");
+        assertThat(clarify.code()).isEqualTo(1);
+        JsonNode json = JSON.readTree(clarify.out());
+        assertThat(json.get("status").asString()).isEqualTo("needs_clarification");
+        assertThat(json.get("questions").get(0).asString()).isEqualTo("Qual variável?");
+
+        app.validator.reply("STATUS: ok\nSEARCH: refund a payment");
+        app.answerer.reply("Estorno em [1].");
+        String input = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"ask_code\","
+                + "\"arguments\":{\"question\":\"onde fica o estorno?\",\"top_k\":3}}}\n"
+                + "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"ask_code\",\"arguments\":{\"query\":\"x\"}}}\n";
+        List<JsonNode> replies = app.runWithInput(input, "mcp").out().lines().map(l -> JSON.readTree(l)).toList();
+        JsonNode payload = JSON.readTree(replies.get(0).get("result").get("content").get(0).get("text").asString());
+        assertThat(payload.get("status").asString()).isEqualTo("answered");
+        assertThat(payload.get("sources").get(0).get("cited").asBoolean()).isTrue();
+        assertThat(payload.get("sources").get(0).has("text")).isFalse();
+        assertThat(replies.get(1).get("result").get("isError").asBoolean()).as("campo desconhecido").isTrue();
+
+        assertThat(app.run("ask").err()).startsWith("erro [invalid_request]");
     }
 }

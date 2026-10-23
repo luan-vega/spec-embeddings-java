@@ -1,5 +1,7 @@
 package br.codesearch.adapter.in;
 
+import br.codesearch.application.AskResponse;
+import br.codesearch.application.AskService;
 import br.codesearch.application.SearchService;
 import br.codesearch.application.SearchResponse;
 import br.codesearch.domain.ChunkView;
@@ -14,8 +16,63 @@ import tools.jackson.databind.JsonNode;
 public final class Payloads {
 
     private static final List<String> ALLOWED_FIELDS = List.of("query", "mode", "repos", "languages", "path_prefix", "top_k");
+    private static final List<String> ASK_FIELDS = List.of("question", "repos", "languages", "path_prefix", "top_k");
 
     private Payloads() {}
+
+    private static Map<String, Object> chunk(ChunkView c) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("repo", c.repo());
+        m.put("source", c.source());
+        m.put("symbol", c.symbol());
+        m.put("start_line", c.startLine());
+        m.put("end_line", c.endLine());
+        return m;
+    }
+
+    private static Map<String, Object> coverage(SearchResponse.Coverage cov) {
+        List<Map<String, Object>> unavailable = new ArrayList<>();
+        for (SearchResponse.Unavailable u : cov.unavailable()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("repo", u.repo());
+            m.put("reason", u.reason());
+            unavailable.add(m);
+        }
+        Map<String, Object> coverage = new LinkedHashMap<>();
+        coverage.put("searched", cov.searched());
+        coverage.put("unavailable", unavailable);
+        return coverage;
+    }
+
+    /** Resposta de uma pergunta. Os trechos vão sem o código (o cliente abre pelo caminho e pelas linhas). */
+    public static Map<String, Object> askResponse(AskResponse r) {
+        Map<String, Object> plan = new LinkedHashMap<>();
+        plan.put("intent", r.plan().intent());
+        plan.put("identifiers", r.plan().identifiers());
+        plan.put("search_text", r.plan().searchText());
+        plan.put("queries", r.plan().queries());
+        List<Map<String, Object>> sources = new ArrayList<>();
+        for (AskResponse.Source s : r.sources()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("n", s.n());
+            m.putAll(chunk(s.chunk()));
+            m.put("score", s.score());
+            m.put("cited", s.cited());
+            sources.add(m);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("status", r.status());
+        out.put("answer", r.answer());
+        out.put("questions", r.questions());
+        out.put("plan", plan);
+        out.put("sources", sources);
+        out.put("warnings", r.warnings());
+        out.put("coverage", r.coverage() == null ? null : coverage(r.coverage()));
+        out.put("models", Map.of("validator", r.models().validator(), "answerer", r.models().answerer()));
+        out.put("timings_ms", r.timingsMs());
+        out.put("request_id", r.requestId());
+        return out;
+    }
 
     public static Map<String, Object> searchResponse(SearchResponse r) {
         List<Map<String, Object>> results = new ArrayList<>();
@@ -86,6 +143,33 @@ public final class Payloads {
             out.add(item.asString());
         }
         return out;
+    }
+
+    /** Valida o corpo de uma pergunta (HTTP ou argumentos da ferramenta MCP). Campo desconhecido é erro. */
+    public static AskService.Ask parseAsk(JsonNode body, String requestId) {
+        if (body == null || !body.isObject()) {
+            throw invalid("body must be a JSON object");
+        }
+        for (var field : body.properties()) {
+            if (!ASK_FIELDS.contains(field.getKey())) {
+                throw invalid("unknown field in request");
+            }
+        }
+        JsonNode question = body.get("question");
+        if (question == null || !question.isString()) {
+            throw invalid("question must be a string");
+        }
+        JsonNode prefix = body.get("path_prefix");
+        if (prefix != null && !prefix.isNull() && !prefix.isString()) {
+            throw invalid("path_prefix must be a string");
+        }
+        JsonNode topK = body.get("top_k");
+        if (topK != null && !topK.isIntegralNumber()) {
+            throw invalid("top_k out of range");
+        }
+        return new AskService.Ask(question.asString(), stringList(body.get("repos"), "repos"),
+                stringList(body.get("languages"), "languages"), prefix == null || prefix.isNull() ? null : prefix.asString(),
+                topK == null ? 8 : topK.asInt(), requestId);
     }
 
     /** Valida o corpo de uma busca (HTTP ou argumentos da ferramenta MCP). Campo desconhecido é erro. */
