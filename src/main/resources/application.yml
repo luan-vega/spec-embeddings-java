@@ -20,9 +20,9 @@ code-search:
   timeout-seconds: 30
   # Provedores EXTERNOS (o texto sai da máquina): só com allow-remote, ou --allow-remote no comando.
   allow-remote: ${CODE_SEARCH_ALLOW_REMOTE:false}
-  describer: ${CODE_SEARCH_DESCRIBER:}                 # vazio, ollama, openai, claude ou gemini
+  describer: ${CODE_SEARCH_DESCRIBER:}                 # vazio, ollama, openai, claude, gemini ou bedrock
   describer-model: ${CODE_SEARCH_DESCRIBER_MODEL:}
-  llm: ${CODE_SEARCH_LLM:claude}                       # pergunta (ask): claude, openai, gemini ou ollama
+  llm: ${CODE_SEARCH_LLM:claude}                       # pergunta (ask): claude, openai, gemini, bedrock ou ollama
   llm-model: ${CODE_SEARCH_LLM_MODEL:}                 # responde; padrão claude-opus-5-5 (claude), gemini-2.5-flash (gemini)
   llm-fast-model: ${CODE_SEARCH_LLM_FAST_MODEL:}       # valida e reescreve; padrão claude-haiku-5-5 (claude), o mesmo do llm-model nos outros
   openai-base-url: ${CODE_SEARCH_OPENAI_BASE_URL:https://api.openai.com/v1}
@@ -32,3 +32,8 @@ code-search:
   gemini-base-url: ${CODE_SEARCH_GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
   gemini-model: ${CODE_SEARCH_GEMINI_MODEL:gemini-embedding-001}
   gemini-dimensions: ${CODE_SEARCH_GEMINI_DIMENSIONS:0}
+  # AWS Bedrock: credenciais só pela cadeia padrão da AWS (AWS_ACCESS_KEY_ID..., AWS_PROFILE, role); nunca aqui.
+  bedrock-region: ${CODE_SEARCH_BEDROCK_REGION:${AWS_REGION:}}
+  bedrock-endpoint: ${CODE_SEARCH_BEDROCK_ENDPOINT:}   # vazio = endereço oficial; use para VPC endpoint
+  bedrock-model: ${CODE_SEARCH_BEDROCK_MODEL:cohere.embed-multilingual-v3}   # embeddings: amazon.titan-embed-text-v2:0 ou cohere.embed-*
+  bedrock-dimensions: ${CODE_SEARCH_BEDROCK_DIMENSIONS:0}
