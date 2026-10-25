@@ -125,6 +125,8 @@ curl -s -X POST http://127.0.0.1:8765/v1/search -H 'Content-Type: application/js
      -d '{"query": "estornar pagamento", "top_k": 5}'
 curl -s -X POST http://127.0.0.1:8765/v1/ask -H 'Content-Type: application/json' \
      -d '{"question": "onde o estorno devolve o dinheiro ao comprador?"}'
+curl -sN -X POST http://127.0.0.1:8765/v1/ask/stream -H 'Content-Type: application/json' \
+     -d '{"question": "onde o estorno devolve o dinheiro ao comprador?"}'   # resposta aparecendo aos poucos (SSE)
 ```
 
 Para o `/v1/ask` usar um provedor externo, suba o servidor com `CODE_SEARCH_ALLOW_REMOTE=1` e a chave no ambiente.
@@ -368,6 +370,28 @@ code-search ask "como é calculado o juros composto da parcela?" --allow-remote 
 - A resposta JSON traz `plan` (intenção, identificadores, buscas feitas), `sources` (com `cited`), `warnings`, `models` e
   `timings_ms` (tempo de cada passo).
 
+### Streaming da resposta
+
+O passo 3 é o mais lento (o modelo forte escreve a resposta inteira). Para não esperar calado, a resposta aparece enquanto
+o modelo escreve:
+
+- **CLI**: `ask` sem `--json` imprime o texto aos poucos. Com `--json`, espera o fim e imprime o JSON completo.
+- **HTTP**: `POST /v1/ask/stream` responde em Server-Sent Events, um JSON por evento:
+
+| Evento | Quando | `data` |
+|---|---|---|
+| `stage` | começo de cada passo | `{"stage": "validate"}`, depois `search` e `answer` |
+| `sources` | antes da resposta | trechos numerados como nas citações `[n]` (`cited` ainda falso) |
+| `delta` | enquanto o modelo escreve | `{"text": "..."}`, já sem o marcador `NOT_FOUND` |
+| `result` | no fim | o mesmo JSON do `/v1/ask`, com `cited`, `warnings` e `timings_ms`; é o resultado oficial |
+| `error` | falha depois de começar | `{"error": {"code", "message", "request_id"}}` |
+
+  Erro antes do primeiro evento (corpo inválido, provedor bloqueado) sai como JSON comum com status HTTP, igual ao `/v1/ask`.
+  Pedido de esclarecimento e busca vazia não têm `delta`: vão direto para `result`. Se o cliente desconectar, a geração é
+  interrompida.
+- Streaming nativo na Claude, OpenAI, Gemini e Ollama. No Bedrock a resposta chega num pedaço só, no fim. A ferramenta MCP
+  `ask_code` continua devolvendo a resposta inteira.
+
 ## Referência: comandos, HTTP e MCP
 
 ### Comandos
@@ -399,6 +423,7 @@ Opções de provedor valem em qualquer comando: `--embedder X`, `--describer X`,
 | `GET /ready` | | 200 ou 503 com `checks` (embedder, índice, perfil) |
 | `POST /v1/search` | `query`, `mode`, `repos`, `languages`, `path_prefix`, `top_k` | `status`, `results`, `coverage`, `index`, `request_id` |
 | `POST /v1/ask` | `question`, `repos`, `languages`, `path_prefix`, `top_k` | `status`, `answer`, `questions`, `plan`, `sources`, `warnings`, `coverage`, `models`, `timings_ms` |
+| `POST /v1/ask/stream` | o mesmo do `/v1/ask` | `text/event-stream`: eventos `stage`, `sources`, `delta` e `result` (o mesmo JSON do `/v1/ask`); veja [Streaming](#streaming-da-resposta) |
 
 Corpo JSON com `Content-Type: application/json`, até 64 KB; campo desconhecido é erro 400. Erros saem como
 `{"error": {"code", "message", "request_id"}}` com código estável (`invalid_request`, `no_repos_available`,

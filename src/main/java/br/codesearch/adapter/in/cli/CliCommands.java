@@ -421,11 +421,21 @@ public final class CliCommands {
         }
         AskService.Ask question = new AskService.Ask(p.positional().get(0), p.all("--repo"), p.all("--language"),
                 p.one("--path-prefix", null), topK, null);
-        AskResponse r = ask.get().ask(question);
         if (p.flags().contains("--json")) {
+            AskResponse r = ask.get().ask(question);
             out.println(JSON.writerWithDefaultPrettyPrinter().writeValueAsString(Payloads.askResponse(r)));
             return r.status().equals("answered") ? 0 : 1;
         }
+        // Texto: a resposta aparece enquanto o modelo escreve.
+        boolean[] streamed = {false};
+        AskResponse r = ask.get().ask(question, new AskService.Listener() {
+            @Override
+            public void delta(String text) {
+                streamed[0] = true;
+                out.print(text);
+                out.flush();
+            }
+        });
         switch (r.status()) {
             case "needs_clarification" -> {
                 out.println("preciso de mais informação para buscar:");
@@ -433,10 +443,14 @@ public final class CliCommands {
             }
             case "no_results" -> out.println("nenhum trecho encontrado para: " + String.join(" | ", r.plan().queries()));
             default -> {
-                if (r.status().equals("not_found")) {
-                    out.println("os trechos encontrados não respondem a pergunta.");
+                if (streamed[0]) {
+                    out.println();
+                } else {
+                    out.println(r.answer());
                 }
-                out.println(r.answer());
+                if (r.status().equals("not_found")) {
+                    out.println("(os trechos encontrados não respondem a pergunta)");
+                }
                 out.println();
                 out.println("trechos:");
                 for (AskResponse.Source s : r.sources()) {

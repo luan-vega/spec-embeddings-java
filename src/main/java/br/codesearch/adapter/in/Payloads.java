@@ -51,8 +51,24 @@ public final class Payloads {
         plan.put("identifiers", r.plan().identifiers());
         plan.put("search_text", r.plan().searchText());
         plan.put("queries", r.plan().queries());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("status", r.status());
+        out.put("answer", r.answer());
+        out.put("questions", r.questions());
+        out.put("plan", plan);
+        out.put("sources", sources(r.sources()));
+        out.put("warnings", r.warnings());
+        out.put("coverage", r.coverage() == null ? null : coverage(r.coverage()));
+        out.put("models", Map.of("validator", r.models().validator(), "answerer", r.models().answerer()));
+        out.put("timings_ms", r.timingsMs());
+        out.put("request_id", r.requestId());
+        return out;
+    }
+
+    /** Trechos de uma pergunta, sem o código. */
+    public static List<Map<String, Object>> sources(List<AskResponse.Source> list) {
         List<Map<String, Object>> sources = new ArrayList<>();
-        for (AskResponse.Source s : r.sources()) {
+        for (AskResponse.Source s : list) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("n", s.n());
             m.putAll(chunk(s.chunk()));
@@ -60,18 +76,7 @@ public final class Payloads {
             m.put("cited", s.cited());
             sources.add(m);
         }
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("status", r.status());
-        out.put("answer", r.answer());
-        out.put("questions", r.questions());
-        out.put("plan", plan);
-        out.put("sources", sources);
-        out.put("warnings", r.warnings());
-        out.put("coverage", r.coverage() == null ? null : coverage(r.coverage()));
-        out.put("models", Map.of("validator", r.models().validator(), "answerer", r.models().answerer()));
-        out.put("timings_ms", r.timingsMs());
-        out.put("request_id", r.requestId());
-        return out;
+        return sources;
     }
 
     public static Map<String, Object> searchResponse(SearchResponse r) {

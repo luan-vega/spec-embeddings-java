@@ -9,6 +9,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -63,6 +65,44 @@ final class RemoteHttp {
         } catch (JacksonException e) {
             throw new CodeSearchException(errorCode.equals("embedder_unavailable") ? "embedder_invalid_output" : errorCode,
                     "the provider returned invalid JSON");
+        }
+    }
+
+    /**
+     * POST com resposta em streaming: Server-Sent Events. Chama {@code onData} com o JSON de cada linha {@code data:}, na
+     * ordem em que chegam ({@code [DONE]} e linhas que não são de dados são ignoradas). Devolve o status; fora de 200 o corpo
+     * não é lido.
+     */
+    int postSse(String path, Map<String, Object> body, Consumer<JsonNode> onData) {
+        HttpRequest.Builder req = HttpRequest.newBuilder(base.resolve(path)).timeout(timeout)
+                .header("Content-Type", "application/json")
+                .header("Accept", "text/event-stream")
+                .POST(HttpRequest.BodyPublishers.ofByteArray(JSON.writeValueAsBytes(body)));
+        headers.forEach(req::header);
+        try {
+            HttpResponse<Stream<String>> resp = http.send(req.build(), HttpResponse.BodyHandlers.ofLines());
+            try (Stream<String> lines = resp.body()) {
+                if (resp.statusCode() != 200) {
+                    return resp.statusCode();
+                }
+                for (String line : (Iterable<String>) lines::iterator) {
+                    if (!line.startsWith("data:")) {
+                        continue;
+                    }
+                    String data = line.substring(5).strip();
+                    if (!data.isEmpty() && !data.equals("[DONE]")) {
+                        onData.accept(JSON.readTree(data));
+                    }
+                }
+            }
+            return 200;
+        } catch (IOException | java.io.UncheckedIOException e) {
+            throw new CodeSearchException(errorCode, "the provider is not reachable");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CodeSearchException(errorCode, "interrupted");
+        } catch (JacksonException e) {
+            throw new CodeSearchException(errorCode, "the provider returned invalid JSON");
         }
     }
 

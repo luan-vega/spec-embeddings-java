@@ -9,6 +9,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -48,6 +50,37 @@ public final class OllamaClient {
             byte[] raw = resp.body();
             return new Response(resp.statusCode(), raw.length == 0 ? null : JSON.readTree(raw));
         } catch (IOException e) {
+            throw new CodeSearchException("embedder_unavailable", "Ollama is not reachable");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CodeSearchException("embedder_unavailable", "interrupted");
+        } catch (JacksonException e) {
+            throw new CodeSearchException("embedder_invalid_output", "Ollama returned invalid JSON");
+        }
+    }
+
+    /**
+     * POST com resposta em streaming (NDJSON, um objeto JSON por linha), entregando cada objeto a {@code onLine}. Devolve o
+     * status; fora de 200 o corpo não é lido.
+     */
+    public int streamLines(String path, Map<String, Object> body, Consumer<JsonNode> onLine) {
+        HttpRequest req = HttpRequest.newBuilder(base.resolve(path)).timeout(timeout)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofByteArray(JSON.writeValueAsBytes(body))).build();
+        try {
+            HttpResponse<Stream<String>> resp = http.send(req, HttpResponse.BodyHandlers.ofLines());
+            try (Stream<String> lines = resp.body()) {
+                if (resp.statusCode() != 200) {
+                    return resp.statusCode();
+                }
+                for (String line : (Iterable<String>) lines::iterator) {
+                    if (!line.isBlank()) {
+                        onLine.accept(JSON.readTree(line));
+                    }
+                }
+            }
+            return 200;
+        } catch (IOException | java.io.UncheckedIOException e) {
             throw new CodeSearchException("embedder_unavailable", "Ollama is not reachable");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
