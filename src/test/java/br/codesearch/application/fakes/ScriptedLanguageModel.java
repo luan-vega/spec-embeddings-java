@@ -5,6 +5,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.function.Consumer;
 
 /** Modelo de teste: devolve as respostas na ordem dada e guarda o que recebeu. */
 public class ScriptedLanguageModel implements LanguageModel {
@@ -39,6 +40,16 @@ public class ScriptedLanguageModel implements LanguageModel {
             throw new IllegalStateException("no scripted reply left");
         }
         return replies.poll();
+    }
+
+    /** Entrega a resposta em pedaços de 3 caracteres, como um streaming real que corta palavras ao meio. */
+    @Override
+    public String stream(String system, String user, int maxTokens, Consumer<String> onDelta) {
+        String text = complete(system, user, maxTokens);
+        for (int i = 0; i < text.length(); i += 3) {
+            onDelta.accept(text.substring(i, Math.min(text.length(), i + 3)));
+        }
+        return text;
     }
 
     @Override

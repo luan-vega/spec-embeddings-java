@@ -14,6 +14,7 @@ import br.codesearch.application.fakes.ScriptedLanguageModel;
 import br.codesearch.domain.CodeSearchException;
 import br.codesearch.domain.ExclusionPolicy;
 import br.codesearch.domain.RepoEntry;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -161,5 +162,90 @@ class AskServiceTest {
         assertThat(v.intent()).isEqualTo("other");
         assertThat(v.identifiers()).containsExactly("a.b.c", "foo");
         assertThat(v.searchText()).isEqualTo("pergunta original");
+    }
+
+    /** Guarda os eventos do streaming na ordem em que chegam. */
+    static final class Recorder implements AskService.Listener {
+        final List<String> events = new ArrayList<>();
+        final StringBuilder text = new StringBuilder();
+        List<AskResponse.Source> sources = List.of();
+
+        @Override
+        public void stage(String name) {
+            events.add("stage:" + name);
+        }
+
+        @Override
+        public void sources(List<AskResponse.Source> s) {
+            events.add("sources:" + s.size());
+            sources = s;
+        }
+
+        @Override
+        public void delta(String t) {
+            if (events.isEmpty() || !events.get(events.size() - 1).equals("delta")) {
+                events.add("delta");
+            }
+            text.append(t);
+        }
+    }
+
+    @Test
+    void streamsStagesSourcesAndTheAnswerInPieces() {
+        validator.reply("STATUS: ok\nIDENTIFIERS: calcularJurosComposto\nSEARCH: compound interest");
+        answerer.reply("O cálculo fica em `Pagamento.calcularJurosComposto` [1].");
+        Recorder rec = new Recorder();
+
+        AskResponse r = service().ask(Ask.of("como é calculado o juros composto?"), rec);
+
+        assertThat(rec.events).containsExactly("stage:validate", "stage:search", "sources:" + r.sources().size(),
+                "stage:answer", "delta");
+        assertThat(rec.text.toString()).isEqualTo(r.answer());
+        assertThat(rec.sources.get(0).n()).isEqualTo(1);
+        assertThat(rec.sources.get(0).cited()).isFalse();
+        assertThat(r.sources().get(0).cited()).isTrue();
+        assertThat(r.status()).isEqualTo("answered");
+    }
+
+    @Test
+    void streamingStripsTheNotFoundMarkerEvenWhenItArrivesInPieces() {
+        validator.reply("STATUS: ok\nSEARCH: send e-mail");
+        answerer.reply("NOT_FOUND\nNenhum trecho envia e-mail.");
+        Recorder rec = new Recorder();
+
+        AskResponse r = service().ask(Ask.of("onde o e-mail é enviado?"), rec);
+
+        assertThat(r.status()).isEqualTo("not_found");
+        assertThat(rec.text.toString()).isEqualTo("Nenhum trecho envia e-mail.").isEqualTo(r.answer());
+    }
+
+    @Test
+    void clarificationEndsTheStreamBeforeSearching() {
+        validator.reply("STATUS: clarify\nQUESTION: Qual variável?");
+        Recorder rec = new Recorder();
+
+        AskResponse r = service().ask(Ask.of("como mapear esta variável?"), rec);
+
+        assertThat(r.status()).isEqualTo("needs_clarification");
+        assertThat(rec.events).containsExactly("stage:validate");
+        assertThat(answerer.calls).isEmpty();
+    }
+
+    @Test
+    void markerFilterOnlyDropsARealMarker() {
+        assertThat(filtered("NOT", "_FO", "UND", "  ", "\nfalta o serviço")).isEqualTo("falta o serviço");
+        assertThat(filtered("NOT", "A", " bene")).isEqualTo("NOTA bene");
+        assertThat(filtered("NO")).isEqualTo("NO");
+        assertThat(filtered("  Resposta", " direta")).isEqualTo("Resposta direta");
+    }
+
+    static String filtered(String... pieces) {
+        StringBuilder out = new StringBuilder();
+        AskService.MarkerFilter f = new AskService.MarkerFilter(out::append);
+        for (String p : pieces) {
+            f.accept(p);
+        }
+        f.finish();
+        return out.toString();
     }
 }

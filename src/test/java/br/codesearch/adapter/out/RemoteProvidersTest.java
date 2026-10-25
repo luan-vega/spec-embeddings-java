@@ -56,6 +56,9 @@ class RemoteProvidersTest {
 
     void reply(HttpExchange ex) throws IOException {
         byte[] b = response.getBytes(StandardCharsets.UTF_8);
+        if (response.startsWith("event:") || response.startsWith("data:")) {
+            ex.getResponseHeaders().add("Content-Type", "text/event-stream");
+        }
         ex.sendResponseHeaders(status, b.length);
         ex.getResponseBody().write(b);
         ex.close();
@@ -278,5 +281,61 @@ class RemoteProvidersTest {
         assertThat(gemini.complete("sys", "user", 50)).isEqualTo("ok");
         assertThat(seen.get(1).path()).isEqualTo("/models/gemini-2.5-flash:generateContent");
         assertThat(seen.get(1).body().get("systemInstruction").get("parts").get(0).get("text").asString()).isEqualTo("sys");
+    }
+
+    static String sse(String... data) {
+        StringBuilder sb = new StringBuilder();
+        for (String d : data) {
+            sb.append("event: x\ndata: ").append(d).append("\n\n");
+        }
+        return sb.toString();
+    }
+
+    @Test
+    void claudeChatStreamsTextDeltasAndStopsOnRefusalOrError() throws Exception {
+        String base = start();
+        response = sse("{\"type\":\"message_start\",\"message\":{}}",
+                "{\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\"hmm\"}}",
+                "{\"type\":\"content_block_delta\",\"index\":1,\"delta\":{\"type\":\"text_delta\",\"text\":\"O estorno \"}}",
+                "{\"type\":\"content_block_delta\",\"index\":1,\"delta\":{\"type\":\"text_delta\",\"text\":\"fica em [1].\"}}",
+                "{\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"}}", "{\"type\":\"message_stop\"}");
+        RemoteChats.Claude claude = new RemoteChats.Claude(base, KEY, "claude-opus-5-5", "");
+        List<String> pieces = new java.util.ArrayList<>();
+
+        assertThat(claude.stream("sys", "user", 100, pieces::add)).isEqualTo("O estorno fica em [1].");
+        assertThat(pieces).containsExactly("O estorno ", "fica em [1].");
+        assertThat(seen.get(0).body().get("stream").asBoolean()).isTrue();
+        assertThat(seen.get(0).headers().get("accept")).isEqualTo("text/event-stream");
+
+        response = sse("{\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"refusal\"}}");
+        assertThatThrownBy(() -> claude.stream("s", "u", 10, d -> {})).hasMessageContaining("declined");
+        response = sse("{\"type\":\"error\",\"error\":{\"type\":\"overloaded_error\",\"message\":\"" + KEY + "\"}}");
+        assertThatThrownBy(() -> claude.stream("s", "u", 10, d -> {})).isInstanceOfSatisfying(CodeSearchException.class,
+                e -> assertThat(e.getMessage()).doesNotContain(KEY));
+        response = sse("{\"type\":\"message_stop\"}");
+        assertThatThrownBy(() -> claude.stream("s", "u", 10, d -> {})).hasMessageContaining("empty");
+        status = 401;
+        response = "{\"error\":\"" + KEY + "\"}";
+        assertThatThrownBy(() -> claude.stream("s", "u", 10, d -> {})).hasMessageContaining("authentication failed")
+                .satisfies(e -> assertThat(e.getMessage()).doesNotContain(KEY));
+    }
+
+    @Test
+    void openAiAndGeminiChatsStream() throws Exception {
+        String base = start();
+        response = sse("{\"choices\":[{\"delta\":{\"role\":\"assistant\"}}]}", "{\"choices\":[{\"delta\":{\"content\":\"res\"}}]}",
+                "{\"choices\":[{\"delta\":{\"content\":\"posta\"}}]}", "[DONE]");
+        RemoteChats.OpenAi openai = new RemoteChats.OpenAi(base + "/v1", KEY, "gpt-x");
+        List<String> pieces = new java.util.ArrayList<>();
+        assertThat(openai.stream("sys", "user", 50, pieces::add)).isEqualTo("resposta");
+        assertThat(pieces).containsExactly("res", "posta");
+        assertThat(seen.get(0).body().get("stream").asBoolean()).isTrue();
+
+        response = sse("{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"pensando\",\"thought\":true}]}}]}",
+                "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"o\"}]}}]}",
+                "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"k\"}]}}]}");
+        RemoteChats.Gemini gemini = new RemoteChats.Gemini(base, KEY, "gemini-2.5-flash");
+        assertThat(gemini.stream("sys", "user", 50, d -> {})).isEqualTo("ok");
+        assertThat(seen.get(1).path()).isEqualTo("/models/gemini-2.5-flash:streamGenerateContent");
     }
 }

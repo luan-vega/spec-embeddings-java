@@ -16,13 +16,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Pergunta em linguagem natural em três passos: um modelo rápido valida e reescreve a pergunta (ou pede esclarecimento), a
  * busca híbrida roda as consultas derivadas, e um modelo mais forte responde só com os trechos achados. A resposta é
- * conferida sem LLM: citações [n] inexistentes e identificadores que não aparecem nos trechos viram avisos.
+ * conferida sem LLM: citações [n] inexistentes e identificadores que não aparecem nos trechos viram avisos. Com um
+ * {@link Listener}, a resposta chega aos pedaços enquanto o modelo escreve (streaming).
  */
 public final class AskService {
 
@@ -80,6 +82,25 @@ public final class AskService {
         }
     }
 
+    /**
+     * Acompanha uma pergunta em andamento. Os métodos rodam na thread da pergunta, na ordem: {@code stage("validate")},
+     * {@code stage("search")}, {@code sources}, {@code stage("answer")} e os {@code delta}. Pedido de esclarecimento ou busca
+     * vazia encerram antes. O {@link AskResponse} devolvido no fim continua sendo o resultado oficial.
+     */
+    public interface Listener {
+
+        /** Um passo começou: validate, search ou answer. */
+        default void stage(String name) {}
+
+        /** Trechos que o modelo vai receber, numerados como nas citações [n] ({@code cited} ainda falso). */
+        default void sources(List<Source> sources) {}
+
+        /** Pedaço da resposta, já sem o marcador NOT_FOUND. */
+        default void delta(String text) {}
+    }
+
+    private static final Listener SILENT = new Listener() {};
+
     /** Saída do passo de validação, já conferida. */
     record Validation(boolean clarify, String intent, List<String> identifiers, String searchText, List<String> questions) {}
 
@@ -97,6 +118,12 @@ public final class AskService {
     }
 
     public AskResponse ask(Ask a) {
+        return ask(a, null);
+    }
+
+    /** {@code listener} nulo: sem streaming, uma chamada só ao modelo da resposta. */
+    public AskResponse ask(Ask a, Listener listener) {
+        Listener events = listener == null ? SILENT : listener;
         String requestId = a.requestId() != null ? a.requestId() : UUID.randomUUID().toString().replace("-", "");
         String question = a.question() == null ? "" : a.question().strip();
         if (question.isEmpty() || question.length() > MAX_QUESTION_CHARS) {
@@ -112,6 +139,7 @@ public final class AskService {
         Map<String, Long> timings = new LinkedHashMap<>();
 
         long t0 = System.nanoTime();
+        events.stage("validate");
         Validation v = parseValidation(validator.complete(VALIDATE_SYSTEM, validateInput(question, a.repos()), VALIDATE_MAX_TOKENS),
                 question);
         timings.put("validate", ms(t0));
@@ -122,6 +150,7 @@ public final class AskService {
         }
 
         long t1 = System.nanoTime();
+        events.stage("search");
         List<SearchService.Query> queries = queries(question, v, a);
         List<SearchResponse> responses = new ArrayList<>();
         for (SearchService.Query q : queries) {
@@ -141,7 +170,20 @@ public final class AskService {
         }
 
         long t2 = System.nanoTime();
-        String raw = answerer.complete(ANSWER_SYSTEM, answerInput(question, merged), ANSWER_MAX_TOKENS).strip();
+        String raw;
+        if (listener == null) {
+            raw = answerer.complete(ANSWER_SYSTEM, answerInput(question, merged), ANSWER_MAX_TOKENS).strip();
+        } else {
+            List<Source> pending = new ArrayList<>();
+            for (int i = 0; i < merged.size(); i++) {
+                pending.add(new Source(i + 1, merged.get(i).chunk(), merged.get(i).score(), false));
+            }
+            events.sources(List.copyOf(pending));
+            events.stage("answer");
+            MarkerFilter filter = new MarkerFilter(events::delta);
+            raw = answerer.stream(ANSWER_SYSTEM, answerInput(question, merged), ANSWER_MAX_TOKENS, filter).strip();
+            filter.finish();
+        }
         timings.put("answer", ms(t2));
         boolean notFound = raw.startsWith(NOT_FOUND);
         String answer = notFound ? raw.substring(NOT_FOUND.length()).strip() : raw;
@@ -158,6 +200,59 @@ public final class AskService {
         }
         return new AskResponse(notFound ? "not_found" : "answered", answer, List.of(), plan, sources, warnings, coverage,
                 models, timings, requestId);
+    }
+
+    /**
+     * Repassa o texto em streaming tirando o marcador NOT_FOUND do começo, com a mesma regra da resposta inteira: segura os
+     * primeiros caracteres enquanto ainda podem ser o marcador e, se forem, descarta o marcador e os espaços depois dele.
+     */
+    static final class MarkerFilter implements Consumer<String> {
+        private final Consumer<String> out;
+        private final StringBuilder head = new StringBuilder();
+        private int state; // 0: decidindo, 1: repassando, 2: depois do marcador, pulando espaços
+
+        MarkerFilter(Consumer<String> out) {
+            this.out = out;
+        }
+
+        @Override
+        public void accept(String delta) {
+            if (state == 1) {
+                out.accept(delta);
+                return;
+            }
+            if (state == 2) {
+                String rest = delta.stripLeading();
+                if (!rest.isEmpty()) {
+                    state = 1;
+                    out.accept(rest);
+                }
+                return;
+            }
+            head.append(delta);
+            String h = head.toString().stripLeading();
+            if (h.length() < NOT_FOUND.length() && NOT_FOUND.startsWith(h)) {
+                return;
+            }
+            if (h.startsWith(NOT_FOUND)) {
+                state = 2;
+                accept(h.substring(NOT_FOUND.length()));
+            } else {
+                state = 1;
+                out.accept(h);
+            }
+        }
+
+        /** Texto que acabou ainda parecendo o começo do marcador (por exemplo "NOT") não é o marcador: repassa. */
+        void finish() {
+            if (state == 0) {
+                String h = head.toString().strip();
+                if (!h.isEmpty()) {
+                    out.accept(h);
+                }
+                state = 1;
+            }
+        }
     }
 
     private static long ms(long start) {

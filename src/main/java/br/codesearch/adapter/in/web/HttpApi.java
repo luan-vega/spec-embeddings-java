@@ -10,8 +10,10 @@ import br.codesearch.application.SearchService;
 import br.codesearch.application.StatusService;
 import br.codesearch.domain.CodeSearchException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
@@ -153,5 +155,76 @@ class HttpApi {
             log.put("duration_ms", (System.nanoTime() - started) / 1e6);
             StructuredLog.event(System.err, "ask", log);
         }
+    }
+
+    /**
+     * A mesma pergunta de /v1/ask, com a resposta em Server-Sent Events: {@code stage} (validate, search, answer),
+     * {@code sources} (trechos numerados), {@code delta} (pedaços do texto) e, no fim, {@code result} com o mesmo JSON de
+     * /v1/ask. Erro antes do primeiro evento vira JSON comum com status HTTP; depois, um evento {@code error}.
+     */
+    @PostMapping("/v1/ask/stream")
+    void askStream(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String requestId = UUID.randomUUID().toString().replace("-", "");
+        long started = System.nanoTime();
+        Map<String, Object> log = new LinkedHashMap<>();
+        log.put("stream", true);
+        SseWriter sse = new SseWriter(response);
+        try {
+            AskService.Ask question = Payloads.parseAsk(readJson(request), requestId);
+            AskService service = CodeSearchException.resolve(ask::getIfAvailable);
+            if (service == null) {
+                throw new CodeSearchException("llm_unavailable", "ask is not available");
+            }
+            AskResponse result = service.ask(question, new AskService.Listener() {
+                @Override
+                public void stage(String name) {
+                    sse.send("stage", Map.of("stage", name));
+                }
+
+                @Override
+                public void sources(List<AskResponse.Source> sources) {
+                    sse.send("sources", Payloads.sources(sources));
+                }
+
+                @Override
+                public void delta(String text) {
+                    sse.send("delta", Map.of("text", text));
+                }
+            });
+            log.put("status", result.status());
+            log.put("sources", result.sources().size());
+            log.put("warnings", result.warnings().size());
+            sse.send("result", Payloads.askResponse(result));
+        } catch (SseWriter.ClientGone e) {
+            log.put("status", "client_gone");
+        } catch (CodeSearchException e) {
+            log.put("status", "error");
+            log.put("code", e.code());
+            fail(sse, response, e, requestId);
+        } catch (IOException | RuntimeException e) {
+            log.put("status", "error");
+            log.put("code", "internal_error");
+            fail(sse, response, new CodeSearchException("internal_error", "internal error"), requestId);
+        } finally {
+            log.put("request_id", requestId);
+            log.put("duration_ms", (System.nanoTime() - started) / 1e6);
+            StructuredLog.event(System.err, "ask", log);
+        }
+    }
+
+    private static void fail(SseWriter sse, HttpServletResponse response, CodeSearchException e, String requestId)
+            throws IOException {
+        if (sse.started()) {
+            try {
+                sse.send("error", Payloads.error(e, requestId));
+            } catch (SseWriter.ClientGone ignored) {
+                // o cliente já foi embora; não há a quem avisar
+            }
+            return;
+        }
+        ResponseEntity<byte[]> entity = error(e, requestId);
+        response.setStatus(entity.getStatusCode().value());
+        entity.getHeaders().forEach((name, values) -> values.forEach(v -> response.addHeader(name, v)));
+        response.getOutputStream().write(entity.getBody());
     }
 }

@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -34,6 +35,9 @@ public final class RemoteChats {
 
         abstract String send(String system, String user, int maxTokens);
 
+        /** Mesma chamada de {@link #send} em streaming (SSE); entrega cada pedaço de texto a {@code onDelta}. */
+        abstract void sendStream(String system, String user, int maxTokens, Consumer<String> onDelta);
+
         @Override
         public String modelId() {
             return id;
@@ -56,6 +60,29 @@ public final class RemoteChats {
             }
             return text;
         }
+
+        @Override
+        public String stream(String system, String user, int maxTokens, Consumer<String> onDelta) {
+            StringBuilder all = new StringBuilder();
+            sendStream(system, user, maxTokens, d -> {
+                if (!d.isEmpty()) {
+                    all.append(d);
+                    onDelta.accept(d);
+                }
+            });
+            String text = all.toString().strip();
+            if (text.isEmpty()) {
+                throw new CodeSearchException(UNAVAILABLE, "the model returned an empty answer");
+            }
+            return text;
+        }
+
+        void stream(String path, Map<String, Object> body, String what, Consumer<JsonNode> onData) {
+            int status = http.postSse(path, body, onData);
+            if (status != 200) {
+                throw http.failure(new RemoteHttp.Response(status, null), what);
+            }
+        }
     }
 
     /**
@@ -72,8 +99,7 @@ public final class RemoteChats {
             this.effort = effort == null ? "" : effort.strip();
         }
 
-        @Override
-        String send(String system, String user, int maxTokens) {
+        private Map<String, Object> body(String system, String user, int maxTokens) {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("model", model);
             body.put("max_tokens", maxTokens);
@@ -82,7 +108,36 @@ public final class RemoteChats {
             if (!effort.isEmpty()) {
                 body.put("output_config", Map.of("effort", effort));
             }
-            RemoteHttp.Response resp = http.post("v1/messages", body);
+            return body;
+        }
+
+        /** Eventos content_block_delta trazem o texto; message_delta traz o stop_reason; error encerra. */
+        @Override
+        void sendStream(String system, String user, int maxTokens, Consumer<String> onDelta) {
+            Map<String, Object> body = body(system, user, maxTokens);
+            body.put("stream", true);
+            stream("v1/messages", body, "Claude failed to answer", event -> {
+                switch (event.path("type").asString("")) {
+                    case "content_block_delta" -> {
+                        if ("text_delta".equals(event.path("delta").path("type").asString(""))) {
+                            onDelta.accept(event.path("delta").path("text").asString(""));
+                        }
+                    }
+                    case "message_delta" -> {
+                        if ("refusal".equals(event.path("delta").path("stop_reason").asString(""))) {
+                            throw new CodeSearchException(UNAVAILABLE, "Claude declined to answer this request");
+                        }
+                    }
+                    case "error" -> throw new CodeSearchException(UNAVAILABLE, "Claude failed to answer: stream interrupted");
+                    default -> {
+                    }
+                }
+            });
+        }
+
+        @Override
+        String send(String system, String user, int maxTokens) {
+            RemoteHttp.Response resp = http.post("v1/messages", body(system, user, maxTokens));
             if (resp.status() != 200 || resp.body() == null) {
                 throw http.failure(resp, "Claude failed to answer");
             }
@@ -105,13 +160,32 @@ public final class RemoteChats {
                     Duration.ofSeconds(120), UNAVAILABLE), model);
         }
 
-        @Override
-        String send(String system, String user, int maxTokens) {
+        private Map<String, Object> body(String system, String user, int maxTokens) {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("model", model);
             body.put("messages", List.of(Map.of("role", "system", "content", system), Map.of("role", "user", "content", user)));
             body.put("max_completion_tokens", maxTokens);
-            RemoteHttp.Response resp = http.post("chat/completions", body);
+            return body;
+        }
+
+        @Override
+        void sendStream(String system, String user, int maxTokens, Consumer<String> onDelta) {
+            Map<String, Object> body = body(system, user, maxTokens);
+            body.put("stream", true);
+            stream("chat/completions", body, "OpenAI failed to answer", chunk -> {
+                if (chunk.has("error")) {
+                    throw new CodeSearchException(UNAVAILABLE, "OpenAI failed to answer: stream interrupted");
+                }
+                JsonNode content = chunk.path("choices").path(0).path("delta").path("content");
+                if (content.isString()) {
+                    onDelta.accept(content.asString());
+                }
+            });
+        }
+
+        @Override
+        String send(String system, String user, int maxTokens) {
+            RemoteHttp.Response resp = http.post("chat/completions", body(system, user, maxTokens));
             if (resp.status() != 200 || resp.body() == null) {
                 throw http.failure(resp, "OpenAI failed to answer");
             }
@@ -129,23 +203,38 @@ public final class RemoteChats {
                     Duration.ofSeconds(120), UNAVAILABLE), model);
         }
 
-        @Override
-        String send(String system, String user, int maxTokens) {
+        private static Map<String, Object> body(String system, String user, int maxTokens) {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("systemInstruction", Map.of("parts", List.of(Map.of("text", system))));
             body.put("contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", user)))));
             body.put("generationConfig", Map.of("maxOutputTokens", maxTokens));
-            RemoteHttp.Response resp = http.post("models/" + model + ":generateContent", body);
-            if (resp.status() != 200 || resp.body() == null) {
-                throw http.failure(resp, "Gemini failed to answer");
-            }
+            return body;
+        }
+
+        /** Texto das partes de uma resposta (inteira ou um pedaço do streaming), sem as partes de raciocínio. */
+        private static String text(JsonNode response) {
             StringBuilder text = new StringBuilder();
-            for (JsonNode part : resp.body().path("candidates").path(0).path("content").path("parts")) {
+            for (JsonNode part : response.path("candidates").path(0).path("content").path("parts")) {
                 if (!part.path("thought").asBoolean(false)) {
                     text.append(part.path("text").asString(""));
                 }
             }
             return text.toString();
+        }
+
+        @Override
+        void sendStream(String system, String user, int maxTokens, Consumer<String> onDelta) {
+            stream("models/" + model + ":streamGenerateContent?alt=sse", body(system, user, maxTokens),
+                    "Gemini failed to answer", chunk -> onDelta.accept(text(chunk)));
+        }
+
+        @Override
+        String send(String system, String user, int maxTokens) {
+            RemoteHttp.Response resp = http.post("models/" + model + ":generateContent", body(system, user, maxTokens));
+            if (resp.status() != 200 || resp.body() == null) {
+                throw http.failure(resp, "Gemini failed to answer");
+            }
+            return text(resp.body());
         }
     }
 
