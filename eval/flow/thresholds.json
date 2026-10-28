@@ -1,0 +1,5 @@
+{
+  "note": "Sem limiares: este dataset só mede o GraphRAG (context_recall e context_size do hybrid+graph contra o recall@k do hybrid).",
+  "k": 10,
+  "rules": []
+}
