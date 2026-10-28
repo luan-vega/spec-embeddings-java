@@ -3,8 +3,10 @@ package br.codesearch.application;
 import br.codesearch.application.AskResponse.Models;
 import br.codesearch.application.AskResponse.Plan;
 import br.codesearch.application.AskResponse.Source;
+import br.codesearch.application.AskResponse.Via;
 import br.codesearch.application.port.LanguageModel;
 import br.codesearch.domain.ChunkView;
+import br.codesearch.domain.CodeGraph;
 import br.codesearch.domain.CodeSearchException;
 import br.codesearch.domain.ExclusionPolicy;
 import br.codesearch.domain.Fusion;
@@ -25,6 +27,10 @@ import java.util.regex.Pattern;
  * busca híbrida roda as consultas derivadas, e um modelo mais forte responde só com os trechos achados. A resposta é
  * conferida sem LLM: citações [n] inexistentes e identificadores que não aparecem nos trechos viram avisos. Com um
  * {@link Listener}, a resposta chega aos pedaços enquanto o modelo escreve (streaming).
+ *
+ * <p>Com o grafo ligado (GraphRAG, {@link GraphContext}), os trechos achados viram sementes: os vizinhos no grafo de código
+ * (quem chama, quem é chamado, supertipos e implementações) entram no contexto depois deles, e o modelo recebe também a lista
+ * de relações entre os trechos.
  */
 public final class AskService {
 
@@ -66,6 +72,13 @@ public final class AskService {
             - Start with the direct answer. When the question asks how to do or change something, follow with a numbered \
             execution plan. Label as a hypothesis anything the snippets do not show.""";
 
+    static final String GRAPH_RULES = """
+
+            - Some snippets were added from the code graph because they are connected to the snippets the search found; \
+            their via attribute says how (for example "called_by [2]": snippet 2 calls this one). The <relations> block \
+            lists calls, inheritance, type usage and membership between the snippets. Use them to follow flows across \
+            methods, classes and repositories, and cite every snippet you rely on.""";
+
     private static final Pattern LINE = Pattern.compile("^\\s*([A-Za-z]+)\\s*:\\s*(.*)$");
     private static final Pattern IDENT = Pattern.compile("[A-Za-z_$][\\w$]*(?:\\.[A-Za-z_$][\\w$]*)*");
     private static final Pattern CITATION = Pattern.compile("\\[(\\d{1,3})]");
@@ -73,12 +86,24 @@ public final class AskService {
     private static final Pattern SINGLE_IDENT = Pattern.compile("[A-Za-z_$][\\w$]*(?:\\.[A-Za-z_$][\\w$]*)*(?:\\(\\))?");
     private static final Set<String> INTENTS = Set.of("locate", "explain", "flow", "implement", "other");
 
-    /** Parâmetros de uma pergunta. {@code repos}, {@code languages} e {@code pathPrefix} podem ser nulos. */
+    /**
+     * Parâmetros de uma pergunta. {@code repos}, {@code languages} e {@code pathPrefix} podem ser nulos. {@code graph} nulo
+     * segue a configuração; verdadeiro ou falso liga ou desliga o GraphRAG só nesta pergunta.
+     */
     public record Ask(
-            String question, List<String> repos, List<String> languages, String pathPrefix, int topK, String requestId) {
+            String question, List<String> repos, List<String> languages, String pathPrefix, int topK, String requestId,
+            Boolean graph) {
+
+        public Ask(String question, List<String> repos, List<String> languages, String pathPrefix, int topK, String requestId) {
+            this(question, repos, languages, pathPrefix, topK, requestId, null);
+        }
 
         public static Ask of(String question) {
             return new Ask(question, null, null, null, 8, null);
+        }
+
+        public Ask withGraph(Boolean on) {
+            return new Ask(question, repos, languages, pathPrefix, topK, requestId, on);
         }
     }
 
@@ -108,13 +133,24 @@ public final class AskService {
     private final LanguageModel validator;
     private final LanguageModel answerer;
     private final ExclusionPolicy policy;
+    private final GraphContext graph;
+    private final boolean graphByDefault;
 
     /** {@code validator} pode ser o mesmo modelo de {@code answerer}; o ideal é um modelo rápido. */
     public AskService(SearchService search, LanguageModel validator, LanguageModel answerer, ExclusionPolicy policy) {
+        this(search, validator, answerer, policy, null, false);
+    }
+
+    /** {@code graph} nulo: sem GraphRAG. {@code graphByDefault}: usa o grafo quando a pergunta não diz nada. */
+    public AskService(
+            SearchService search, LanguageModel validator, LanguageModel answerer, ExclusionPolicy policy, GraphContext graph,
+            boolean graphByDefault) {
         this.search = search;
         this.validator = validator;
         this.answerer = answerer;
         this.policy = policy;
+        this.graph = graph;
+        this.graphByDefault = graphByDefault;
     }
 
     public AskResponse ask(Ask a) {
@@ -131,6 +167,10 @@ public final class AskService {
         }
         if (a.topK() < 1 || a.topK() > MAX_TOP_K) {
             throw new CodeSearchException("invalid_request", "top_k out of range");
+        }
+        boolean useGraph = a.graph() != null ? a.graph() : graph != null && graphByDefault;
+        if (useGraph && graph == null) {
+            throw new CodeSearchException("invalid_request", "graph is not available");
         }
         if ((!validator.local() || !answerer.local()) && policy.containsSecret(question)) {
             throw new CodeSearchException("invalid_request", "the question seems to contain a secret; remove it before asking");
@@ -162,26 +202,48 @@ public final class AskService {
         for (SearchService.Query q : queries) {
             described.add(q.mode() + ": " + q.text());
         }
-        Plan plan = new Plan(v.intent(), v.identifiers(), v.searchText(), described);
+        Plan plan = new Plan(v.intent(), v.identifiers(), v.searchText(), List.copyOf(described));
         SearchResponse.Coverage coverage = responses.get(0).coverage();
         if (merged.isEmpty()) {
             return new AskResponse("no_results", null, List.of(), plan, List.of(), List.of(), coverage, models, timings,
                     requestId);
         }
 
+        // GraphRAG: os vizinhos entram depois dos trechos achados, numerados em seguida.
+        List<SearchResponse.Result> context = new ArrayList<>(merged);
+        List<Via> vias = new ArrayList<>();
+        merged.forEach(r -> vias.add(null));
+        List<CodeGraph.Link> links = List.of();
+        if (useGraph) {
+            long tg = System.nanoTime();
+            GraphContext.Expansion expansion = graph.expand(merged, coverage.searched());
+            for (GraphContext.Extra extra : expansion.extras()) {
+                context.add(extra.result());
+                vias.add(new Via(extra.from() + 1, extra.relation()));
+            }
+            links = expansion.links();
+            timings.put("graph", ms(tg));
+            described.add("graph: " + expansion.extras().size() + " vizinhos, " + links.size() + " relações (hops "
+                    + graph.hops() + ")");
+            plan = new Plan(v.intent(), v.identifiers(), v.searchText(), List.copyOf(described));
+        }
+        boolean graphUsed = context.size() > merged.size() || !links.isEmpty();
+        String system = graphUsed ? ANSWER_SYSTEM + GRAPH_RULES : ANSWER_SYSTEM;
+        String input = graphUsed ? answerInput(question, context, vias, links) : answerInput(question, merged);
+
         long t2 = System.nanoTime();
         String raw;
         if (listener == null) {
-            raw = answerer.complete(ANSWER_SYSTEM, answerInput(question, merged), ANSWER_MAX_TOKENS).strip();
+            raw = answerer.complete(system, input, ANSWER_MAX_TOKENS).strip();
         } else {
             List<Source> pending = new ArrayList<>();
-            for (int i = 0; i < merged.size(); i++) {
-                pending.add(new Source(i + 1, merged.get(i).chunk(), merged.get(i).score(), false));
+            for (int i = 0; i < context.size(); i++) {
+                pending.add(new Source(i + 1, context.get(i).chunk(), context.get(i).score(), false, vias.get(i)));
             }
             events.sources(List.copyOf(pending));
             events.stage("answer");
             MarkerFilter filter = new MarkerFilter(events::delta);
-            raw = answerer.stream(ANSWER_SYSTEM, answerInput(question, merged), ANSWER_MAX_TOKENS, filter).strip();
+            raw = answerer.stream(system, input, ANSWER_MAX_TOKENS, filter).strip();
             filter.finish();
         }
         timings.put("answer", ms(t2));
@@ -189,14 +251,14 @@ public final class AskService {
         String answer = notFound ? raw.substring(NOT_FOUND.length()).strip() : raw;
 
         List<String> warnings = new ArrayList<>();
-        Set<Integer> cited = checkCitations(answer, merged.size(), warnings);
-        checkIdentifiers(answer, merged, warnings);
+        Set<Integer> cited = checkCitations(answer, context.size(), warnings);
+        checkIdentifiers(answer, context, warnings);
         if (!notFound && cited.isEmpty()) {
             warnings.add("a resposta não cita nenhum trecho");
         }
         List<Source> sources = new ArrayList<>();
-        for (int i = 0; i < merged.size(); i++) {
-            sources.add(new Source(i + 1, merged.get(i).chunk(), merged.get(i).score(), cited.contains(i + 1)));
+        for (int i = 0; i < context.size(); i++) {
+            sources.add(new Source(i + 1, context.get(i).chunk(), context.get(i).score(), cited.contains(i + 1), vias.get(i)));
         }
         return new AskResponse(notFound ? "not_found" : "answered", answer, List.of(), plan, sources, warnings, coverage,
                 models, timings, requestId);
@@ -353,15 +415,33 @@ public final class AskService {
     }
 
     static String answerInput(String question, List<SearchResponse.Result> results) {
+        return answerInput(question, results, null, List.of());
+    }
+
+    /** {@code vias} (pode ser nulo) diz de onde veio cada trecho trazido pelo grafo; {@code links} vira o bloco relations. */
+    static String answerInput(
+            String question, List<SearchResponse.Result> results, List<Via> vias, List<CodeGraph.Link> links) {
         StringBuilder sb = new StringBuilder("<question>\n")
                 .append(question.replace("</question", "<\\/question")).append("\n</question>\n");
         for (int i = 0; i < results.size(); i++) {
             ChunkView c = results.get(i).chunk();
             String text = c.text().length() > MAX_SNIPPET_CHARS ? c.text().substring(0, MAX_SNIPPET_CHARS) : c.text();
+            Via via = vias == null ? null : vias.get(i);
             sb.append("\n<snippet n=\"").append(i + 1).append("\" repo=\"").append(c.repo()).append("\" path=\"")
                     .append(c.source()).append("\" symbol=\"").append(c.symbol()).append("\" lines=\"")
-                    .append(c.startLine()).append('-').append(c.endLine()).append("\">\n")
-                    .append(text.replace("</snippet", "<\\/snippet")).append("\n</snippet>\n");
+                    .append(c.startLine()).append('-').append(c.endLine());
+            if (via != null) {
+                sb.append("\" via=\"").append(via);
+            }
+            sb.append("\">\n").append(text.replace("</snippet", "<\\/snippet")).append("\n</snippet>\n");
+        }
+        if (!links.isEmpty()) {
+            sb.append("\n<relations>\n");
+            for (CodeGraph.Link l : links) {
+                sb.append('[').append(l.from() + 1).append("] ").append(l.relation().verb).append(" [").append(l.to() + 1)
+                        .append("]\n");
+            }
+            sb.append("</relations>\n");
         }
         return sb.toString();
     }

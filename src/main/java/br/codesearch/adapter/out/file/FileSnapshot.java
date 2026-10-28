@@ -130,4 +130,10 @@ final class FileSnapshot implements IndexSnapshot {
     public ChunkView record(Hit hit) {
         return segments.get(hit.repoId()).record(hit.row());
     }
+
+    @Override
+    public List<ChunkView> records(String repoId) {
+        StoredSegment seg = segments.get(repoId);
+        return seg == null ? List.of() : seg.records();
+    }
 }

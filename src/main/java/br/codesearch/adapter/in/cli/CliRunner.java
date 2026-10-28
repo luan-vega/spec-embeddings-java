@@ -2,6 +2,7 @@ package br.codesearch.adapter.in.cli;
 
 import br.codesearch.application.AskService;
 import br.codesearch.application.BoundedRunner;
+import br.codesearch.application.GraphContext;
 import br.codesearch.application.IndexService;
 import br.codesearch.application.SearchService;
 import br.codesearch.application.StatusService;
@@ -32,9 +33,10 @@ public class CliRunner implements ApplicationRunner {
     CliRunner(
             RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
             ObjectProvider<Embedder> embedder, ObjectProvider<IndexService> indexer, ObjectProvider<SearchService> search,
-            ProviderCatalog providers, ObjectProvider<AskService> ask) {
+            ProviderCatalog providers, ObjectProvider<AskService> ask, ObjectProvider<GraphContext> graph) {
         this.commands = new CliCommands(registry, policies, store, status, runner, () -> CodeSearchException.resolve(embedder::getObject), () -> CodeSearchException.resolve(indexer::getObject),
-                () -> CodeSearchException.resolve(search::getObject), providers, () -> CodeSearchException.resolve(ask::getObject));
+                () -> CodeSearchException.resolve(search::getObject), providers, () -> CodeSearchException.resolve(ask::getObject),
+                () -> CodeSearchException.resolve(graph::getObject));
     }
 
     @Override

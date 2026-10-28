@@ -43,11 +43,11 @@ class RemoteGateTest {
     }
 
     static CodeSearchProperties props(String embedder, String describer, boolean allowRemote, String base) {
-        return new CodeSearchProperties("", embedder, "", "", "", "", 0, 0, allowRemote, describer, "", base, "", 0, base, base, "", 0, "", "", "", "", "", "", 0);
+        return new CodeSearchProperties("", embedder, "", "", "", "", 0, 0, allowRemote, describer, "", base, "", 0, base, base, "", 0, "", "", "", "", "", "", 0, false, 0, -1);
     }
 
     static CodeSearchProperties llmProps(String llm, boolean allowRemote, String base) {
-        return new CodeSearchProperties("", "ollama", "", "", "", "", 0, 0, allowRemote, "", "", base, "", 0, base, base, "", 0, llm, "", "", "", "", "", 0);
+        return new CodeSearchProperties("", "ollama", "", "", "", "", 0, 0, allowRemote, "", "", base, "", 0, base, base, "", 0, llm, "", "", "", "", "", 0, false, 0, -1);
     }
 
     @Test
@@ -146,7 +146,7 @@ class RemoteGateTest {
     @Test
     void bedrockNeedsPermissionLikeTheOtherExternalProviders() {
         var props = new CodeSearchProperties("", "bedrock", "", "", "", "", 0, 0, false, "bedrock", "m", "", "", 0, "", "", "", 0,
-                "bedrock", "m", "", "us-east-1", "http://127.0.0.1:1", "", 0);
+                "bedrock", "m", "", "us-east-1", "http://127.0.0.1:1", "", 0, false, 0, -1);
         assertThatThrownBy(() -> new CodeSearchConfig().embedder(props, "", ""))
                 .isInstanceOfSatisfying(CodeSearchException.class, e -> assertThat(e.getMessage()).contains("--allow-remote"));
         assertThatThrownBy(() -> new CodeSearchConfig().languageModel(props, true, "", "", ""))

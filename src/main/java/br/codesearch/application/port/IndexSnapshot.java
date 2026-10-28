@@ -7,6 +7,7 @@ import br.codesearch.domain.Hit;
 import br.codesearch.domain.IndexSchema;
 import br.codesearch.domain.Location;
 import br.codesearch.domain.SegmentInfo;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,4 +38,14 @@ public interface IndexSnapshot {
     Location locate(Hit hit);
 
     ChunkView record(Hit hit);
+
+    /** Todos os chunks de um repositório, na ordem das linhas do segmento (índice da lista = {@code Hit.row}). */
+    default List<ChunkView> records(String repoId) {
+        int count = segmentInfo(repoId).map(SegmentInfo::chunks).orElse(0);
+        List<ChunkView> out = new ArrayList<>(count);
+        for (int row = 0; row < count; row++) {
+            out.add(record(new Hit(repoId, row, 0)));
+        }
+        return out;
+    }
 }

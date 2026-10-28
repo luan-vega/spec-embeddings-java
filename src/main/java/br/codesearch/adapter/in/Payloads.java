@@ -16,7 +16,7 @@ import tools.jackson.databind.JsonNode;
 public final class Payloads {
 
     private static final List<String> ALLOWED_FIELDS = List.of("query", "mode", "repos", "languages", "path_prefix", "top_k");
-    private static final List<String> ASK_FIELDS = List.of("question", "repos", "languages", "path_prefix", "top_k");
+    private static final List<String> ASK_FIELDS = List.of("question", "repos", "languages", "path_prefix", "top_k", "graph");
 
     private Payloads() {}
 
@@ -74,6 +74,9 @@ public final class Payloads {
             m.putAll(chunk(s.chunk()));
             m.put("score", s.score());
             m.put("cited", s.cited());
+            if (s.via() != null) { // trecho trazido pelo grafo (GraphRAG)
+                m.put("via", Map.of("from", s.via().from(), "relation", s.via().relation()));
+            }
             sources.add(m);
         }
         return sources;
@@ -172,9 +175,13 @@ public final class Payloads {
         if (topK != null && !topK.isIntegralNumber()) {
             throw invalid("top_k out of range");
         }
+        JsonNode graph = body.get("graph");
+        if (graph != null && !graph.isNull() && !graph.isBoolean()) {
+            throw invalid("graph must be a boolean");
+        }
         return new AskService.Ask(question.asString(), stringList(body.get("repos"), "repos"),
                 stringList(body.get("languages"), "languages"), prefix == null || prefix.isNull() ? null : prefix.asString(),
-                topK == null ? 8 : topK.asInt(), requestId);
+                topK == null ? 8 : topK.asInt(), requestId, graph == null || graph.isNull() ? null : graph.asBoolean());
     }
 
     /** Valida o corpo de uma busca (HTTP ou argumentos da ferramenta MCP). Campo desconhecido é erro. */

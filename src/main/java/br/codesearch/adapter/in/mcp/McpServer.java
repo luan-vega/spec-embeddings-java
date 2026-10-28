@@ -81,6 +81,8 @@ public final class McpServer {
             askProps.put("languages", Map.of("type", "array", "items", Map.of("type", "string")));
             askProps.put("path_prefix", Map.of("type", "string"));
             askProps.put("top_k", Map.of("type", "integer", "minimum", 1, "maximum", AskService.MAX_TOP_K));
+            askProps.put("graph", Map.of("type", "boolean", "description",
+                    "GraphRAG: também traz quem chama, quem é chamado e implementações dos trechos achados"));
             out.add(tool("ask_code", "Pergunta sobre o código em linguagem natural: valida a pergunta (ou pede esclarecimento), "
                     + "busca e responde citando os trechos [n]. Usa um modelo de linguagem, que pode ser externo. Somente leitura.",
                     askProps, List.of("question")));

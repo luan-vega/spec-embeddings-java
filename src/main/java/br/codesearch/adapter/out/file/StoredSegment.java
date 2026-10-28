@@ -214,15 +214,32 @@ final class StoredSegment {
             throw new IndexOutOfBoundsException(row);
         }
         try (RandomAccessFile file = new RandomAccessFile(dir.resolve("chunks.jsonl").toFile(), "r")) {
-            byte[] raw = new byte[(int) (offsets[row + 1] - offsets[row])];
-            file.seek(offsets[row]);
-            file.readFully(raw);
-            JsonNode json = JSON.readTree(new String(raw, StandardCharsets.UTF_8));
-            return new ChunkView(ref.repoId(), sources.get(sourceIdx[row]), json.get("symbol").asString(),
-                    json.get("parent_symbol").asString(), startLine[row], endLine[row], languages.get(langIdx[row]),
-                    json.get("text").asString(), manifest.get("repo_revision").asString(), manifest.get("indexed_at").asString());
+            return read(file, row);
         } catch (IOException e) {
             throw new CodeSearchException("vector_store_unavailable", "could not read chunk");
         }
+    }
+
+    /** Todos os chunks, lidos em sequência com o arquivo aberto uma vez só. */
+    List<ChunkView> records() {
+        List<ChunkView> out = new ArrayList<>(count);
+        try (RandomAccessFile file = new RandomAccessFile(dir.resolve("chunks.jsonl").toFile(), "r")) {
+            for (int row = 0; row < count; row++) {
+                out.add(read(file, row));
+            }
+        } catch (IOException e) {
+            throw new CodeSearchException("vector_store_unavailable", "could not read chunk");
+        }
+        return out;
+    }
+
+    private ChunkView read(RandomAccessFile file, int row) throws IOException {
+        byte[] raw = new byte[(int) (offsets[row + 1] - offsets[row])];
+        file.seek(offsets[row]);
+        file.readFully(raw);
+        JsonNode json = JSON.readTree(new String(raw, StandardCharsets.UTF_8));
+        return new ChunkView(ref.repoId(), sources.get(sourceIdx[row]), json.get("symbol").asString(),
+                json.get("parent_symbol").asString(), startLine[row], endLine[row], languages.get(langIdx[row]),
+                json.get("text").asString(), manifest.get("repo_revision").asString(), manifest.get("indexed_at").asString());
     }
 }

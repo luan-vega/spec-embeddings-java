@@ -15,6 +15,8 @@ import java.util.function.Function;
 public final class Evaluation {
 
     public static final List<String> MODES = SearchService.MODES;
+    /** Modo extra do GraphRAG: a lista do hybrid seguida dos vizinhos no grafo, como o ask monta o contexto. */
+    public static final String GRAPH_MODE = "hybrid+graph";
 
     private Evaluation() {}
 
@@ -111,16 +113,39 @@ public final class Evaluation {
     public static Report evaluate(
             Function<SearchService.Query, SearchResponse> search, List<Case> cases, List<String> modes, int k,
             List<String> repos) {
+        return evaluate(search, cases, modes, k, repos, null);
+    }
+
+    /**
+     * Com {@code graph} (trechos a mais para uma resposta do hybrid), mede também o modo {@link #GRAPH_MODE}. As métricas
+     * por posição (recall@k, mrr, ndcg) não mudam, porque os vizinhos vêm depois dos k trechos; o ganho aparece em
+     * {@code context_recall} (itens relevantes em todo o contexto, para comparar com o recall@k do hybrid) e o custo em
+     * {@code context_size} e na latência (busca + expansão).
+     */
+    public static Report evaluate(
+            Function<SearchService.Query, SearchResponse> search, List<Case> cases, List<String> modes, int k,
+            List<String> repos, Function<SearchResponse, List<SearchResponse.Result>> graph) {
+        List<String> runModes = new ArrayList<>(modes);
+        if (graph != null) {
+            runModes.add(GRAPH_MODE);
+        }
+        modes = runModes;
         String recallK = "recall@" + k;
         String ndcgK = "ndcg@" + k;
         Map<String, Map<String, Map<String, List<Double>>>> perMode = new LinkedHashMap<>();
         for (String mode : modes) {
             for (Case c : cases) {
+                boolean withGraph = mode.equals(GRAPH_MODE);
                 long started = System.nanoTime();
-                SearchResponse response = search.apply(new SearchService.Query(c.query(), mode, repos, null, null, k, null));
+                SearchResponse response = search.apply(
+                        new SearchService.Query(c.query(), withGraph ? "hybrid" : mode, repos, null, null, k, null));
+                List<SearchResponse.Result> results = new ArrayList<>(response.results());
+                if (withGraph) {
+                    results.addAll(graph.apply(response));
+                }
                 double elapsedMs = (System.nanoTime() - started) / 1e6;
                 List<Boolean> flags = new ArrayList<>();
-                for (SearchResponse.Result r : response.results()) {
+                for (SearchResponse.Result r : results) {
                     flags.add(isRelevant(r, c.relevant()));
                 }
                 int total = c.relevant().size();
@@ -130,8 +155,16 @@ public final class Evaluation {
                             for (String name : List.of("recall@1", "recall@5", recallK, "mrr", ndcgK, "latency_ms")) {
                                 b.put(name, new ArrayList<>());
                             }
+                            if (withGraph) {
+                                b.put("context_recall", new ArrayList<>());
+                                b.put("context_size", new ArrayList<>());
+                            }
                             return b;
                         });
+                if (withGraph) {
+                    bucket.get("context_recall").add(recallAtK(flags, total, flags.size()));
+                    bucket.get("context_size").add((double) flags.size());
+                }
                 bucket.get("recall@1").add(recallAtK(flags, total, 1));
                 bucket.get("recall@5").add(recallAtK(flags, total, 5));
                 bucket.get(recallK).add(recallAtK(flags, total, k));

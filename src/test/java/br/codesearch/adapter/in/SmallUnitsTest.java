@@ -41,6 +41,16 @@ class SmallUnitsTest {
     }
 
     @Test
+    void askBodyAcceptsAnOptionalGraphSwitch() {
+        JsonMapper json = JsonMapper.builder().build();
+        assertThat(Payloads.parseAsk(json.readTree("{\"question\":\"x\"}"), null).graph()).isNull();
+        assertThat(Payloads.parseAsk(json.readTree("{\"question\":\"x\",\"graph\":true}"), null).graph()).isTrue();
+        assertThat(Payloads.parseAsk(json.readTree("{\"question\":\"x\",\"graph\":null}"), null).graph()).isNull();
+        assertThatThrownBy(() -> Payloads.parseAsk(json.readTree("{\"question\":\"x\",\"graph\":\"sim\"}"), null))
+                .hasMessageContaining("graph");
+    }
+
+    @Test
     void runnerRejectsWhenFullAndTimesOut() throws Exception {
         try (BoundedRunner runner = new BoundedRunner(1, 200, 7)) {
             CountDownLatch release = new CountDownLatch(1);
