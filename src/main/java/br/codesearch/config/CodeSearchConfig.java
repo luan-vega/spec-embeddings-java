@@ -19,6 +19,7 @@ import br.codesearch.adapter.out.remote.RemoteChats;
 import br.codesearch.adapter.out.remote.RemoteDescribers;
 import br.codesearch.adapter.out.sparse.JavaSparseEncoder;
 import br.codesearch.application.AskService;
+import br.codesearch.application.GraphContext;
 import br.codesearch.application.BoundedRunner;
 import br.codesearch.application.IndexService;
 import br.codesearch.application.SearchService;
@@ -216,10 +217,19 @@ class CodeSearchConfig {
     @Bean
     @Lazy
     AskService askService(
-            CodeSearchProperties props, SearchService search, PolicyStore policies, @Value("${OPENAI_API_KEY:}") String openaiKey,
+            CodeSearchProperties props, SearchService search, PolicyStore policies, GraphContext graphContext,
+            @Value("${OPENAI_API_KEY:}") String openaiKey,
             @Value("${ANTHROPIC_API_KEY:}") String anthropicKey, @Value("${GEMINI_API_KEY:}") String geminiKey) {
         return new AskService(search, languageModel(props, true, openaiKey, anthropicKey, geminiKey),
-                languageModel(props, false, openaiKey, anthropicKey, geminiKey), policies.load());
+                languageModel(props, false, openaiKey, anthropicKey, geminiKey), policies.load(), graphContext,
+                props.graph());
+    }
+
+    /** Grafo de código do GraphRAG: montado na primeira pergunta que o usa e refeito quando a geração do índice muda. */
+    @Bean
+    @Lazy
+    GraphContext graphContext(CodeSearchProperties props, VectorStore store) {
+        return new GraphContext(store, props.graphHops(), props.graphMaxExtra());
     }
 
     @Bean

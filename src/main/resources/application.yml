@@ -25,6 +25,10 @@ code-search:
   llm: ${CODE_SEARCH_LLM:claude}                       # pergunta (ask): claude, openai, gemini, bedrock ou ollama
   llm-model: ${CODE_SEARCH_LLM_MODEL:}                 # responde; padrão claude-opus-5-5 (claude), gemini-2.5-flash (gemini)
   llm-fast-model: ${CODE_SEARCH_LLM_FAST_MODEL:}       # valida e reescreve; padrão claude-haiku-5-5 (claude), o mesmo do llm-model nos outros
+  # GraphRAG no ask: a busca acha os trechos e o grafo de código traz quem chama, quem é chamado, supertipos e implementações.
+  graph: ${CODE_SEARCH_GRAPH:false}
+  graph-hops: ${CODE_SEARCH_GRAPH_HOPS:1}               # 1 ou 2 passos no grafo
+  graph-max-extra: ${CODE_SEARCH_GRAPH_MAX_EXTRA:4}     # trechos a mais no contexto (0 a 20)
   openai-base-url: ${CODE_SEARCH_OPENAI_BASE_URL:https://api.openai.com/v1}
   openai-model: ${CODE_SEARCH_OPENAI_MODEL:text-embedding-3-small}
   openai-dimensions: ${CODE_SEARCH_OPENAI_DIMENSIONS:0}

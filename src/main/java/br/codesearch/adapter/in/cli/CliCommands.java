@@ -6,6 +6,7 @@ import br.codesearch.application.AskResponse;
 import br.codesearch.application.AskService;
 import br.codesearch.application.BoundedRunner;
 import br.codesearch.application.Evaluation;
+import br.codesearch.application.GraphContext;
 import br.codesearch.application.IndexReport;
 import br.codesearch.application.IndexService;
 import br.codesearch.application.SearchResponse;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.function.Function;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -51,15 +53,17 @@ public final class CliCommands {
               index [--repo ID]... [--force]          reindexa os repositórios habilitados
               search <consulta> [--mode hybrid|semantic|lexical] [--repo ID]... [--language L]...
                      [--path-prefix P] [--top-k N] [--json]
-              ask <pergunta> [--repo ID]... [--language L]... [--path-prefix P] [--top-k N] [--json]
-                                                      valida a pergunta, busca e responde citando os trechos
+              ask <pergunta> [--repo ID]... [--language L]... [--path-prefix P] [--top-k N] [--graph|--no-graph] [--json]
+                                                      valida a pergunta, busca e responde citando os trechos;
+                                                      --graph traz vizinhos no grafo de código (GraphRAG)
               status [--json]                         estado do índice e dos repositórios
               rollback                                volta para a geração anterior
               prune [--tmp-max-age SEGUNDOS]          apaga gerações e segmentos sem referência
               serve [--host H] [--port N]             HTTP local em 127.0.0.1
               mcp                                     servidor MCP por stdio (somente leitura)
-              eval --dataset F --thresholds F [--repo ID]... [--out F]
-                                                      gate de avaliação (UC1/UC2/UC3); sai com 1 se reprovar
+              eval --dataset F --thresholds F [--repo ID]... [--out F] [--graph]
+                                                      gate de avaliação (UC1/UC2/UC3); sai com 1 se reprovar;
+                                                      --graph mede também o modo hybrid+graph (context_recall)
 
             provedor, em qualquer comando (padrão: local, pelo ambiente):
               --embedder ollama|openai|gemini|bedrock openai, gemini e bedrock são EXTERNOS: trechos e consultas saem da máquina
@@ -71,7 +75,7 @@ public final class CliCommands {
     private static final JsonMapper JSON = JsonMapper.builder().build();
     private static final Map<String, Set<String>> FLAGS = Map.of(
             "policy", Set.of("--force"), "index", Set.of("--force"), "search", Set.of("--json"), "status", Set.of("--json"),
-            "providers", Set.of("--json"), "ask", Set.of("--json"));
+            "providers", Set.of("--json"), "ask", Set.of("--json", "--graph", "--no-graph"), "eval", Set.of("--graph"));
     private static final Map<String, Set<String>> OPTIONS = Map.of(
             "repo", Set.of("--root"), "index", Set.of("--repo"),
             "search", Set.of("--mode", "--repo", "--language", "--path-prefix", "--top-k"), "prune", Set.of("--tmp-max-age"),
@@ -89,6 +93,7 @@ public final class CliCommands {
 
     private final ProviderCatalog providers;
     private final Supplier<AskService> ask;
+    private final Supplier<GraphContext> graph;
 
     public CliCommands(
             RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
@@ -108,7 +113,16 @@ public final class CliCommands {
             RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
             Supplier<Embedder> embedder, Supplier<IndexService> indexer, Supplier<SearchService> search,
             ProviderCatalog providers, Supplier<AskService> ask) {
+        this(registry, policies, store, status, runner, embedder, indexer, search, providers, ask, null);
+    }
+
+    /** {@code graph} nulo: sem {@code eval --graph}. */
+    public CliCommands(
+            RepoCatalog registry, PolicyStore policies, VectorStore store, StatusService status, BoundedRunner runner,
+            Supplier<Embedder> embedder, Supplier<IndexService> indexer, Supplier<SearchService> search,
+            ProviderCatalog providers, Supplier<AskService> ask, Supplier<GraphContext> graph) {
         this.ask = ask;
+        this.graph = graph;
         this.providers = providers;
         this.registry = registry;
         this.policies = policies;
@@ -346,7 +360,17 @@ public final class CliCommands {
         Evaluation.Thresholds thresholds = EvalFiles.loadThresholds(Path.of(p.one("--thresholds", null)));
         List<Evaluation.Case> cases = EvalFiles.loadDataset(Path.of(p.one("--dataset", null)));
         SearchService service = search.get();
-        Evaluation.Report report = Evaluation.evaluate(service::search, cases, Evaluation.MODES, thresholds.k(), p.all("--repo"));
+        Function<SearchResponse, List<SearchResponse.Result>> expand = null;
+        if (p.flags().contains("--graph")) {
+            if (graph == null) {
+                throw new CodeSearchException("invalid_request", "graph is not available");
+            }
+            GraphContext context = graph.get();
+            expand = r -> context.expand(r.results(), r.coverage().searched()).extras().stream()
+                    .map(GraphContext.Extra::result).toList();
+        }
+        Evaluation.Report report = Evaluation.evaluate(service::search, cases, Evaluation.MODES, thresholds.k(), p.all("--repo"),
+                expand);
         List<Evaluation.Failure> failures = Evaluation.checkThresholds(report, thresholds);
 
         Map<String, Object> json = new LinkedHashMap<>();
@@ -419,8 +443,12 @@ public final class CliCommands {
         } catch (NumberFormatException e) {
             throw new CodeSearchException("invalid_request", "top_k out of range");
         }
+        if (p.flags().contains("--graph") && p.flags().contains("--no-graph")) {
+            throw new CodeSearchException("invalid_request", "use --graph or --no-graph, not both");
+        }
+        Boolean graph = p.flags().contains("--graph") ? Boolean.TRUE : p.flags().contains("--no-graph") ? Boolean.FALSE : null;
         AskService.Ask question = new AskService.Ask(p.positional().get(0), p.all("--repo"), p.all("--language"),
-                p.one("--path-prefix", null), topK, null);
+                p.one("--path-prefix", null), topK, null, graph);
         if (p.flags().contains("--json")) {
             AskResponse r = ask.get().ask(question);
             out.println(JSON.writerWithDefaultPrettyPrinter().writeValueAsString(Payloads.askResponse(r)));
@@ -455,8 +483,8 @@ public final class CliCommands {
                 out.println("trechos:");
                 for (AskResponse.Source s : r.sources()) {
                     var c = s.chunk();
-                    out.printf("  [%d]%s %s:%s:%d-%d  %s%n", s.n(), s.cited() ? "*" : " ", c.repo(), c.source(), c.startLine(),
-                            c.endLine(), c.symbol());
+                    out.printf("  [%d]%s %s:%s:%d-%d  %s%s%n", s.n(), s.cited() ? "*" : " ", c.repo(), c.source(), c.startLine(),
+                            c.endLine(), c.symbol(), s.via() == null ? "" : "  (grafo: " + s.via() + ")");
                 }
             }
         }

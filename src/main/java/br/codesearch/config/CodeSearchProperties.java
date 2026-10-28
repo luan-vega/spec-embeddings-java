@@ -10,6 +10,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>{@code embedder}: ollama (local), openai, gemini ou bedrock (EXTERNOS). {@code describer}: vazio (sem descrição), ollama (local), openai,
  * claude, gemini ou bedrock (EXTERNOS). {@code llm} (pergunta, comando ask): claude (padrão), openai, gemini, bedrock (EXTERNOS) ou ollama;
  * {@code llmFastModel} valida e reescreve a pergunta, {@code llmModel} responde. Os externos só funcionam com {@code allowRemote}.
+ *
+ * <p>{@code graph}: GraphRAG no ask (vizinhos no grafo de código entram no contexto), desligado por padrão;
+ * {@code graphHops} (1 ou 2) e {@code graphMaxExtra} (trechos a mais, 0 a 20) ajustam a expansão.
  */
 @ConfigurationProperties("code-search")
 public record CodeSearchProperties(
@@ -17,7 +20,8 @@ public record CodeSearchProperties(
         int maxConcurrent, int timeoutSeconds, boolean allowRemote, String describer, String describerModel,
         String openaiBaseUrl, String openaiModel, int openaiDimensions, String anthropicBaseUrl,
         String geminiBaseUrl, String geminiModel, int geminiDimensions, String llm, String llmModel, String llmFastModel,
-        String bedrockRegion, String bedrockEndpoint, String bedrockModel, int bedrockDimensions) {
+        String bedrockRegion, String bedrockEndpoint, String bedrockModel, int bedrockDimensions, boolean graph,
+        int graphHops, int graphMaxExtra) {
 
     public CodeSearchProperties {
         embedder = embedder == null || embedder.isBlank() ? "ollama" : embedder;
@@ -40,6 +44,8 @@ public record CodeSearchProperties(
         bedrockRegion = bedrockRegion == null ? "" : bedrockRegion.strip();
         bedrockEndpoint = bedrockEndpoint == null ? "" : bedrockEndpoint.strip();
         bedrockModel = bedrockModel == null || bedrockModel.isBlank() ? "cohere.embed-multilingual-v3" : bedrockModel.strip();
+        graphHops = graphHops <= 0 ? 1 : graphHops;
+        graphMaxExtra = graphMaxExtra < 0 ? 4 : graphMaxExtra;
         anthropicBaseUrl = anthropicBaseUrl == null || anthropicBaseUrl.isBlank() ? "https://api.anthropic.com" : anthropicBaseUrl;
     }
 }

@@ -83,6 +83,13 @@ class FileStoreEndToEndTest {
         assertThat(record.text()).isEqualTo("void estorno() { }");
         assertThat(record.repoRevision()).isEqualTo("r1");
         assertThat(snap.locate(new Hit("svc", 2, 0)).source()).isEqualTo("src/main/java/b/Doc.java");
+        // leitura em sequência (grafo do GraphRAG) igual à leitura linha a linha
+        var all = snap.records("svc");
+        assertThat(all).hasSize(3);
+        for (int row = 0; row < all.size(); row++) {
+            assertThat(all.get(row)).isEqualTo(snap.record(new Hit("svc", row, 0)));
+        }
+        assertThat(snap.records("outro")).isEmpty();
 
         assertThatThrownBy(() -> snap.search(List.of("svc"), new float[] {1, 0}, List.of(), Filters.NONE, "semantic", 5))
                 .isInstanceOfSatisfying(CodeSearchException.class, e -> assertThat(e.code()).isEqualTo("profile_mismatch"));

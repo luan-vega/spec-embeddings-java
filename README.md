@@ -204,8 +204,8 @@ flowchart LR
 ```
 br.codesearch
 ├── CodeSearchApplication        ponto de entrada: serve (HTTP) ou um comando de CLI
-├── domain                       JavaChunker, SparseTokenizer, Fusion, ExclusionPolicy, EmbeddingProfile, ChunkIds, ...
-├── application                  IndexService, SearchService, AskService, StatusService, Evaluation, BoundedRunner
+├── domain                       JavaChunker, CodeGraph, SparseTokenizer, Fusion, ExclusionPolicy, EmbeddingProfile, ...
+├── application                  IndexService, SearchService, AskService, GraphContext, StatusService, Evaluation, ...
 │   └── port                     Embedder, ChunkDescriber, LanguageModel, VectorStore, RepoRegistry, SourceReader, ...
 ├── adapter
 │   ├── in
@@ -370,6 +370,54 @@ code-search ask "como é calculado o juros composto da parcela?" --allow-remote 
 - A resposta JSON traz `plan` (intenção, identificadores, buscas feitas), `sources` (com `cited`), `warnings`, `models` e
   `timings_ms` (tempo de cada passo).
 
+### GraphRAG: contexto pelo grafo de código
+
+Desligado por padrão. Ligado, o `ask` deixa de mandar ao modelo só os trechos que a busca achou: eles viram **sementes** de
+um grafo de código, e os vizinhos mais ligados entram no contexto logo depois deles. Ajuda nas perguntas de fluxo ("o que
+acontece quando o pedido é fechado?"), em que a resposta está espalhada entre quem chama, quem é chamado e a implementação
+de uma interface, muitas vezes em outro repositório.
+
+```mermaid
+flowchart LR
+    Q["Pergunta"] --> S["Busca híbrida<br/>(RRF)"]
+    S --> SEED["Trechos achados<br/>[1] .. [k]"]
+    SEED --> G["Grafo de código<br/>chamadas, herança, tipos, membros"]
+    G --> NB["Vizinhos<br/>[k+1] .. com via"]
+    SEED --> CTX["Contexto do modelo<br/>trechos + bloco relations"]
+    NB --> CTX
+    CTX --> A["Resposta citada"]
+```
+
+- **O grafo**: cada chunk indexado é um nó. As arestas são chamadas de método (o dono vem do tipo da variável, do campo, do
+  parâmetro ou da classe citada), herança (`extends`/`implements`, inclusive método que sobrescreve o da interface), uso de
+  tipo e "membro de" (método → cabeçalho da classe), entre todos os repositórios. Uma chamada na interface também liga às
+  implementações (até 4). Nome ambíguo demais (mais de 4 alvos) não vira aresta. É uma aproximação por nomes: não resolve
+  imports, sobrecarga nem chamadas encadeadas (`a.b().c()`).
+- **Sem reindexar**: o grafo sai do texto dos chunks já indexados, com o mesmo mascaramento de comentários e strings do
+  chunker. Fica em memória, montado na primeira pergunta que o usa e refeito quando a geração do índice muda.
+- **Expansão**: cada vizinho soma `peso da semente (1/posição) × peso da relação` (chamada 1,0; quem chama 0,8; supertipo
+  0,9; subtipo 0,7; tipo usado 0,6; quem usa 0,5; classe 0,5; membro 0,3), pela metade no segundo passo. Um nó ligado a
+  várias sementes sobe. Só entram vizinhos dos repositórios que a busca cobriu.
+- **No prompt**: cada trecho trazido pelo grafo tem `via` (por exemplo `called_by [2]`: o trecho 2 chama este) e o modelo
+  recebe um bloco `<relations>` com as ligações entre todos os trechos (`[1] calls [3]`, `[4] extends or implements [2]`).
+  Na resposta JSON, esses trechos têm `"via": {"from": 2, "relation": "called_by"}` e `score` da expansão; o `plan` ganha
+  a linha `graph: N vizinhos, M relações`, e `timings_ms` o passo `graph`.
+
+| Onde | Como ligar |
+|---|---|
+| Ambiente | `CODE_SEARCH_GRAPH=true` (vale para CLI, HTTP e MCP) |
+| CLI | `ask "..." --graph` ou `--no-graph` (só nesta pergunta) |
+| HTTP e MCP | `"graph": true` ou `false` no corpo de `/v1/ask`, `/v1/ask/stream` e `ask_code` |
+
+Ajustes: `CODE_SEARCH_GRAPH_HOPS` (1 ou 2 passos, padrão 1) e `CODE_SEARCH_GRAPH_MAX_EXTRA` (trechos a mais, 0 a 20,
+padrão 4).
+
+**Como medir o ganho**: `eval ... --graph` roda também o modo `hybrid+graph` (a lista do hybrid seguida dos vizinhos, como o
+`ask` monta o contexto). As métricas por posição não mudam, porque os vizinhos vêm depois; compare o `context_recall` do
+`hybrid+graph` (itens relevantes em todo o contexto) com o `recall@k` do `hybrid`, olhando o custo em `context_size` e
+latência. O ganho aparece em casos com mais de um item relevante, como perguntas de fluxo (quem chama + quem é chamado);
+vale incluir alguns assim no dataset real, por exemplo com `"uc": "UC4"`.
+
 ### Streaming da resposta
 
 O passo 3 é o mais lento (o modelo forte escreve a resposta inteira). Para não esperar calado, a resposta aparece enquanto
@@ -405,13 +453,13 @@ o modelo escreve:
 | `ollama-probe` | modelo, digest, dimensão e `profile_id` do embedder |
 | `index [--repo ID]... [--force]` | indexa os repositórios habilitados (incremental; `--force` refaz) |
 | `search <consulta> [--mode M] [--repo ID]... [--language L]... [--path-prefix P] [--top-k N] [--json]` | busca |
-| `ask <pergunta> [--repo ID]... [--language L]... [--path-prefix P] [--top-k N] [--json]` | pergunta com resposta |
+| `ask <pergunta> [--repo ID]... [--language L]... [--path-prefix P] [--top-k N] [--graph\|--no-graph] [--json]` | pergunta com resposta; `--graph` liga o [GraphRAG](#graphrag-contexto-pelo-grafo-de-código) |
 | `status [--json]` | estado do índice e dos repositórios |
 | `rollback` | volta para a geração anterior |
 | `prune [--tmp-max-age SEGUNDOS]` | apaga gerações e segmentos sem referência |
 | `serve [--host H] [--port N]` | HTTP local (só loopback) |
 | `mcp` | servidor MCP por stdio (somente leitura) |
-| `eval --dataset F --thresholds F [--repo ID]... [--out F]` | gate de avaliação; sai com 1 se reprovar (ver `eval/README.md`) |
+| `eval --dataset F --thresholds F [--repo ID]... [--out F] [--graph]` | gate de avaliação; sai com 1 se reprovar (ver `eval/README.md`); `--graph` mede também `hybrid+graph` |
 
 Opções de provedor valem em qualquer comando: `--embedder X`, `--describer X`, `--llm X`, `--allow-remote`.
 
@@ -422,7 +470,7 @@ Opções de provedor valem em qualquer comando: `--embedder X`, `--describer X`,
 | `GET /health` | | `{"status": "ok"}`, mesmo sob carga |
 | `GET /ready` | | 200 ou 503 com `checks` (embedder, índice, perfil) |
 | `POST /v1/search` | `query`, `mode`, `repos`, `languages`, `path_prefix`, `top_k` | `status`, `results`, `coverage`, `index`, `request_id` |
-| `POST /v1/ask` | `question`, `repos`, `languages`, `path_prefix`, `top_k` | `status`, `answer`, `questions`, `plan`, `sources`, `warnings`, `coverage`, `models`, `timings_ms` |
+| `POST /v1/ask` | `question`, `repos`, `languages`, `path_prefix`, `top_k`, `graph` | `status`, `answer`, `questions`, `plan`, `sources`, `warnings`, `coverage`, `models`, `timings_ms` |
 | `POST /v1/ask/stream` | o mesmo do `/v1/ask` | `text/event-stream`: eventos `stage`, `sources`, `delta` e `result` (o mesmo JSON do `/v1/ask`); veja [Streaming](#streaming-da-resposta) |
 
 Corpo JSON com `Content-Type: application/json`, até 64 KB; campo desconhecido é erro 400. Erros saem como
@@ -454,6 +502,7 @@ Os nomes são os mesmos da versão Python. Opções de linha de comando têm pre
 | `CODE_SEARCH_LLM` | `claude` | modelo do `ask`: `claude`, `openai`, `gemini`, `bedrock` ou `ollama` |
 | `CODE_SEARCH_LLM_MODEL` / `CODE_SEARCH_LLM_FAST_MODEL` | por provedor | modelo que responde / que valida |
 | `CODE_SEARCH_ALLOW_REMOTE` | `false` | autoriza provedores externos |
+| `CODE_SEARCH_GRAPH`, `CODE_SEARCH_GRAPH_HOPS`, `CODE_SEARCH_GRAPH_MAX_EXTRA` | `false`, `1`, `4` | [GraphRAG](#graphrag-contexto-pelo-grafo-de-código) no `ask` |
 | `CODE_SEARCH_OPENAI_MODEL`, `CODE_SEARCH_OPENAI_DIMENSIONS` | `text-embedding-3-small`, `0` | embedder OpenAI |
 | `CODE_SEARCH_GEMINI_MODEL`, `CODE_SEARCH_GEMINI_DIMENSIONS` | `gemini-embedding-001`, `0` | embedder Gemini |
 | `CODE_SEARCH_OPENAI_BASE_URL`, `CODE_SEARCH_GEMINI_BASE_URL`, `CODE_SEARCH_ANTHROPIC_BASE_URL` | APIs oficiais | endereços (aceita servidores compatíveis) |
@@ -513,12 +562,13 @@ mvn -B verify      # testes unitários, de integração (HTTP, CLI, MCP), ArchUn
 ## Estado e próximos passos
 
 Pronto e testado: indexação incremental, busca híbrida, armazenamento com gerações, HTTP, MCP, CLI, gate de avaliação,
-provedores externos opcionais e a pergunta (`ask`).
+provedores externos opcionais, a pergunta (`ask`) e o GraphRAG opcional no `ask`.
 
 Próximos passos:
 
 - Rodar o gate com um dataset real (2 ou 3 repositórios Java, cerca de 30 consultas por caso de uso) e o modelo
   `qwen3-embedding:0.6b`, comparando com a versão Python.
 - Busca lexical: ignorar palavras comuns do português na consulta e tratar acentos.
-- Índice de referências (quem chama quem, onde um campo é usado) para perguntas sobre fluxo.
+- GraphRAG: medir `hybrid+graph` no dataset real com perguntas de fluxo; se o grafo ajudar, gravá-lo junto do segmento na
+  indexação (hoje é montado em memória) e expor "quem chama"/"onde é usado" como ferramenta MCP.
 - Desenhos de arquitetura como entrada do `ask` (draw.io, Mermaid, PlantUML, depois imagens).
