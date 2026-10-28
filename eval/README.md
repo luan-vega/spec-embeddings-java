@@ -22,6 +22,17 @@ código, como o `ask` com GraphRAG monta o contexto. As métricas por posição 
 contexto). Sem `--graph` o relatório não muda. O ganho só aparece em casos com mais de um item relevante ligados entre si
 (por exemplo, uma pergunta de fluxo com o método que chama e o que é chamado como relevantes).
 
+### Dataset de fluxo (`eval/flow`)
+
+`eval/flow/dataset.jsonl` tem 17 perguntas de fluxo sobre o próprio repositório (repo `self`, raiz `src/main/java`), cada
+uma com 2 a 4 métodos relevantes ligados por chamada (quem chama e quem é chamado). `eval/flow/thresholds.json` não tem
+limiares: serve só para comparar o `context_recall` do `hybrid+graph` com o `recall@10` do hybrid.
+
+`scripts/graphrag_real.sh` faz a rodada inteira com provedores reais: indexa o repositório num `CODE_SEARCH_HOME` novo,
+roda `eval --graph` e faz cada pergunta com e sem `--graph`; o resumo sai em `<OUT>/resumo.md`
+(`scripts/graphrag_summary.py`). Embedder padrão `gemini` (`GEMINI_API_KEY`); LLM `claude` se houver `ANTHROPIC_API_KEY`,
+senão `gemini`.
+
 ## Conferência entre as versões
 
 Com o mesmo corpus indexado e embedders determinísticos equivalentes, os dois relatórios coincidem em todas as métricas de
