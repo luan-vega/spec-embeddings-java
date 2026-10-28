@@ -166,9 +166,9 @@ flowchart LR
 
     subgraph appl["application (núcleo)"]
         direction TB
-        UC["Casos de uso<br/>IndexService, SearchService, AskService<br/>StatusService, Evaluation"]
+        UC["Casos de uso<br/>IndexService, SearchService, AskService<br/>GraphContext, StatusService, Evaluation"]
         PORTS["Portas (application.port)<br/>Embedder, ChunkDescriber, LanguageModel<br/>VectorStore, RepoRegistry, SourceReader<br/>EmbeddingCache, PolicyStore, SparseEncoder"]
-        DOM["domain (regras puras)<br/>JavaChunker, SparseTokenizer, Fusion RRF<br/>ExclusionPolicy, EmbeddingProfile, ChunkIds"]
+        DOM["domain (regras puras)<br/>JavaChunker, CodeGraph, SparseTokenizer, Fusion RRF<br/>ExclusionPolicy, EmbeddingProfile, ChunkIds"]
         UC --> PORTS
         UC --> DOM
     end
@@ -204,15 +204,17 @@ flowchart LR
 ```
 br.codesearch
 ├── CodeSearchApplication        ponto de entrada: serve (HTTP) ou um comando de CLI
+├── ConsoleEncoding              argumentos e stdout/stderr em UTF-8 mesmo em terminal sem locale UTF-8
 ├── domain                       JavaChunker, CodeGraph, SparseTokenizer, Fusion, ExclusionPolicy, EmbeddingProfile, ...
 ├── application                  IndexService, SearchService, AskService, GraphContext, StatusService, Evaluation, ...
 │   └── port                     Embedder, ChunkDescriber, LanguageModel, VectorStore, RepoRegistry, SourceReader, ...
 ├── adapter
 │   ├── in
 │   │   ├── cli                  CliCommands, CliRunner, EvalFiles
-│   │   ├── web                  HttpApi, HttpErrors, LoopbackHostFilter
+│   │   ├── web                  HttpApi, HttpErrors, LoopbackHostFilter, SseWriter
 │   │   ├── mcp                  McpServer
-│   │   └── Payloads             formato JSON compartilhado por HTTP, MCP e CLI
+│   │   ├── Payloads             formato JSON compartilhado por HTTP, MCP e CLI
+│   │   └── StructuredLog        log JSON de cada pedido HTTP no stderr
 │   └── out
 │       ├── ollama               OllamaClient, OllamaEmbedder, OllamaChat
 │       ├── remote               OpenAiEmbedder, GeminiEmbedder, RemoteDescribers, RemoteChats, RemoteHttp
@@ -274,7 +276,8 @@ flowchart TB
     OK -- "não, falta dado" --> CLAR["needs_clarification<br/>até 3 perguntas"]
     OK -- sim --> S["3 buscas sem LLM<br/>semântica reescrita, lexical, semântica original"]
     S --> M["Fusão RRF"]
-    M --> NONE{"Achou trechos?"}
+    M --> GR["GraphRAG opcional<br/>vizinhos no grafo de código"]
+    GR --> NONE{"Achou trechos?"}
     NONE -- não --> NR["no_results"]
     NONE -- sim --> ANS["Modelo forte responde<br/>só com os trechos, citando n"]
     ANS --> CHECK["Conferência sem LLM<br/>citações e identificadores"]
@@ -310,7 +313,7 @@ por comando ou variável de ambiente, sem mexer no código:
   que com o Cohere (96 textos por chamada).
   ```
   export AWS_REGION=us-east-1   # mais as credenciais da AWS no ambiente
-  code-search index meu-repo --embedder bedrock --allow-remote
+  code-search index --repo meu-repo --embedder bedrock --allow-remote
   code-search ask "onde é calculado o frete?" --llm bedrock --allow-remote   # com CODE_SEARCH_LLM_MODEL definido
   ```
 - `code-search providers [--json]` mostra o que está configurado e o que falta em cada provedor, sem chamar nenhum e sem
@@ -415,8 +418,11 @@ padrão 4).
 **Como medir o ganho**: `eval ... --graph` roda também o modo `hybrid+graph` (a lista do hybrid seguida dos vizinhos, como o
 `ask` monta o contexto). As métricas por posição não mudam, porque os vizinhos vêm depois; compare o `context_recall` do
 `hybrid+graph` (itens relevantes em todo o contexto) com o `recall@k` do `hybrid`, olhando o custo em `context_size` e
-latência. O ganho aparece em casos com mais de um item relevante, como perguntas de fluxo (quem chama + quem é chamado);
-vale incluir alguns assim no dataset real, por exemplo com `"uc": "UC4"`.
+latência. O ganho aparece em casos com mais de um item relevante, como perguntas de fluxo (quem chama + quem é chamado).
+
+`eval/flow/dataset.jsonl` traz 17 perguntas assim sobre o próprio repositório (`"uc": "FLOW"`), e
+`scripts/graphrag_real.sh` faz a rodada inteira com provedores reais: indexa o repositório num `CODE_SEARCH_HOME` novo, roda
+`eval --graph` e faz cada pergunta com e sem `--graph`, gravando um resumo em `resumo.md` (veja `eval/README.md`).
 
 ### Streaming da resposta
 
@@ -556,7 +562,7 @@ mvn -B verify      # testes unitários, de integração (HTTP, CLI, MCP), ArchUn
   teste exige resultado idêntico. Se o Python mudar: `python scripts/generate_golden.py <caminho>/code-search-embeddings/src`.
   Diferença conhecida: o desempate por string usa unidades UTF-16 (só difere fora do plano básico).
 - **Gate de qualidade**: `eval/` tem o dataset de exemplo (108 consultas, UC1 conceito, UC2 identificador, UC3 código
-  parecido) e os limiares; veja `eval/README.md`.
+  parecido) e os limiares; `eval/flow/` tem as perguntas de fluxo para medir o GraphRAG. Veja `eval/README.md`.
 - **CI**: GitHub Actions em Linux e Windows (`.github/workflows/ci.yml`).
 
 ## Estado e próximos passos
@@ -569,6 +575,7 @@ Próximos passos:
 - Rodar o gate com um dataset real (2 ou 3 repositórios Java, cerca de 30 consultas por caso de uso) e o modelo
   `qwen3-embedding:0.6b`, comparando com a versão Python.
 - Busca lexical: ignorar palavras comuns do português na consulta e tratar acentos.
-- GraphRAG: medir `hybrid+graph` no dataset real com perguntas de fluxo; se o grafo ajudar, gravá-lo junto do segmento na
-  indexação (hoje é montado em memória) e expor "quem chama"/"onde é usado" como ferramenta MCP.
+- GraphRAG: rodar `scripts/graphrag_real.sh` com embedder e LLM reais (dataset de fluxo e script já prontos) e depois
+  medir também no dataset real; se o grafo ajudar, gravá-lo junto do segmento na indexação (hoje é montado em memória) e
+  expor "quem chama"/"onde é usado" como ferramenta MCP.
 - Desenhos de arquitetura como entrada do `ask` (draw.io, Mermaid, PlantUML, depois imagens).
