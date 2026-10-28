@@ -15,9 +15,6 @@ OUT="${OUT:-$PWD/graphrag-real-$(date +%Y%m%d-%H%M%S)}"
 DATASET="${DATASET:-$ROOT/eval/flow/dataset.jsonl}"
 THRESHOLDS="${THRESHOLDS:-$ROOT/eval/flow/thresholds.json}"
 
-# sem locale UTF-8 a JVM lê os argumentos em ASCII e estraga os acentos das perguntas
-export LC_ALL="${LC_ALL:-C.UTF-8}"
-
 export CODE_SEARCH_EMBEDDER="${CODE_SEARCH_EMBEDDER:-gemini}"
 if [ -z "${CODE_SEARCH_LLM:-}" ]; then
     if [ -n "${ANTHROPIC_API_KEY:-}" ]; then export CODE_SEARCH_LLM=claude; else export CODE_SEARCH_LLM=gemini; fi

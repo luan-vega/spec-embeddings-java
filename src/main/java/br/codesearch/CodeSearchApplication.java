@@ -18,7 +18,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class CodeSearchApplication {
 
     public static void main(String[] args) {
-        System.exit(start(args));
+        System.exit(start(ConsoleEncoding.fix(args)));
     }
 
     /** Argumentos do comando (sem as opções de provedor) e as propriedades Spring equivalentes. */
